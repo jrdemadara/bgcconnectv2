@@ -78,5 +78,5 @@ return [
         ],
 
     ],
-
+    'guards' => ['api'],
 ];

@@ -1,37 +1,54 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Chat;
 
-use App\Models\Chat;
+use App\Events\MessageRequestSent;
+use App\Http\Controllers\Controller;
+use App\Models\Member;
 use App\Models\MessageRequest;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 class MessageRequestController extends Controller
 {
-    public function messageRequest(Request $request)
+    public function messageRequest(Request $request): JsonResponse
     {
         $request->validate([
             'recipientId' => 'required|integer|exists:users,id',
         ]);
 
-        $sender = auth()->user();
+        $sender = Member::with('profile')->find(auth()->id());
         $recipientId = $request->recipientId;
 
-        // Check if a request already exists
-        $existingRequest = MessageRequest::where('sender_id', $sender->id)
+        $messageRequestExists = MessageRequest::where('sender_id', $sender->id)
             ->where('recipient_id', $recipientId)
-            ->first();
+            ->exists();
 
-        if ($existingRequest) {
+        $messageRequestSelf = $sender->id == $recipientId;
+
+        if ($messageRequestSelf) {
             return response()->json([
-                'message' => 'Message request already sent.'
-            ], 409);
+                'message' => 'No! Who the hell want to message themselves?'
+            ], Response::HTTP_FORBIDDEN);
         }
 
-        return response()->json([
-            'message' => 'No existing chat found'
+        if ($messageRequestExists) {
+            return response()->json([
+                'message' => 'Message request already exists.'
+            ], Response::HTTP_CONFLICT);
+        }
+
+        $sessageRequest = MessageRequest::create([
+            'sender_id' => $sender->id,
+            'recipient_id' => $recipientId,
+            'status' => 'pending',
         ]);
+
+        event(new MessageRequestSent($sender, $recipientId));
+
+        return response()->json([
+            'message' => 'Message request sent!'
+        ], Response::HTTP_CREATED);
     }
 }

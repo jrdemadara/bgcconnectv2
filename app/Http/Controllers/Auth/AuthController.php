@@ -7,23 +7,23 @@ use App\Models\Member;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
 {
     public function login(Request $request): JsonResponse
     {
-        // Validate input
         $request->validate([
             'phone' => 'required|string',
             'password' => 'required|string',
         ]);
 
-        // Find the member by phone number
-        $member = Member::where('phone', $request->phone)->first();
+        $user = Member::where('phone', $request->phone)
+            ->with('profile')
+            ->first();
 
-        // Check password
-        if (!$member || !Hash::check($request->password, $member->password)) {
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid phone number or password.',
@@ -31,13 +31,26 @@ class AuthController extends Controller
         }
 
         // Generate a Sanctum token
-        $token = $member->createToken('access-token')->plainTextToken;
+        $token = $user->createToken('access-token')->plainTextToken;
 
         return response()->json([
             'success' => true,
             'access_token' => $token,
-            'member' => $member,
-        ], Response::HTTP_OK); // 200 OK
+            'data' => [
+                'id' => $user->id,
+                'code' => $user->code,
+                'phone' => $user->phone,
+                'points' => $user->points,
+                'level' => $user->level,
+                'firstname' => $user->profile->firstname ?? '',
+                'lastname' => $user->profile->lastname ?? '',
+                'middlename' => $user->profile->middlename ?? '',
+                'extension' => $user->profile->extension ?? '',
+                'avatar' => $user->profile->avatar
+                    ? Storage::temporaryUrl($user->profile->avatar, now()->addDays(5))
+                    : null,
+            ]
+        ], Response::HTTP_OK);
     }
 
     public function logout(Request $request)

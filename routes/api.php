@@ -1,10 +1,11 @@
 <?php
 
+use App\Http\Controllers\Chat\SearchMemberController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\MessageRequestController;
-
+use App\Http\Controllers\Chat\MessageRequestController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -16,5 +17,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logut', [AuthController::class, 'logout']);
     Route::get('/profile', [AuthController::class, 'profile']);
 
-    Route::get('/message-request', [MessageRequestController::class, 'profile']);
+    Route::get('/search-member', [SearchMemberController::class, 'search']);
+    Route::post('/message-request', [MessageRequestController::class, 'messageRequest']);
 });
