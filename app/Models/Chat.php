@@ -11,7 +11,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class Chat extends Model
 {
-    use HasFactory, Notifiable, HasApiTokens, SoftDeletes;
+    use SoftDeletes;
 
     protected $connection = 'pgsql';
     protected $fillable = [
@@ -22,5 +22,10 @@ class Chat extends Model
     public function participants(): HasMany
     {
         return $this->hasMany(ChatParticipant::class);
+    }
+
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class);
     }
 }

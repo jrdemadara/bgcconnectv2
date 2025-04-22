@@ -11,13 +11,14 @@ use Laravel\Sanctum\HasApiTokens;
 
 class ChatParticipant extends Model
 {
-    use HasFactory, Notifiable, HasApiTokens, SoftDeletes;
+    use SoftDeletes;
 
     protected $connection = 'pgsql';
     protected $fillable = [
         'chat_id',
         'user_id',
         'role',
+        'joined_at',
     ];
 
     public function chat(): BelongsTo
