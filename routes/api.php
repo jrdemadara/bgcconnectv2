@@ -25,4 +25,5 @@ Route::middleware("auth:sanctum")->group(function () {
     Route::patch("/message-request-decline", [MessageRequestController::class, "declineMessageRequest"]);
 
     Route::post("/chat-send", [ChatController::class, "sendChat"]);
+    Route::patch("/chat-read", [ChatController::class, "messageRead"]);
 });

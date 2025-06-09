@@ -10,17 +10,19 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 
-class ChatMessageSent implements ShouldBroadcastNow
+class MessageSent implements ShouldBroadcastNow
 {
     use InteractsWithSockets, SerializesModels;
 
+    public $localId;
     public $message;
     public $status;
 
-    public function __construct(Message $message, array $status)
+    public function __construct(Message $message, array $status, int $localId)
     {
         $this->message = $message;
         $this->status = $status;
+        $this->localId = $localId;
     }
 
     public function broadcastOn(): array
@@ -47,6 +49,7 @@ class ChatMessageSent implements ShouldBroadcastNow
                 "updated_at" => $this->message->updated_at->toIso8601String(),
             ],
             "status" => $this->status,
+            "local_id" => $this->localId,
         ];
     }
 }

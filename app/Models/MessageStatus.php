@@ -14,12 +14,9 @@ class MessageStatus extends Model
 {
     use HasFactory, Notifiable, HasApiTokens, SoftDeletes;
 
-    protected $connection = 'pgsql';
-    protected $fillable = [
-        'message_id',
-        'user_id',
-        'status',
-    ];
+    protected $connection = "pgsql";
+    protected $table = "message_status";
+    protected $fillable = ["message_id", "user_id", "status"];
 
     public function chat(): BelongsTo
     {
@@ -28,6 +25,6 @@ class MessageStatus extends Model
 
     public function profile(): HasOne
     {
-        return $this->hasOne(Profile::class, 'user_id');
+        return $this->hasOne(Profile::class, "user_id");
     }
 }

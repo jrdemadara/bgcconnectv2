@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Chat;
 
 use App\Events\ChatCreated;
+use App\Events\ChatRequestSent;
 use App\Events\MessageRequestAccepted;
 use App\Events\MessageRequestSent;
 use App\Http\Controllers\Controller;
@@ -19,123 +20,136 @@ class MessageRequestController extends Controller
     public function messageRequest(Request $request): JsonResponse
     {
         $request->validate([
-            'recipientId' => 'required|integer|exists:users,id',
+            "recipientId" => "required|integer|exists:users,id",
         ]);
 
-        $sender = Member::with('profile')->find(auth()->id());
+        $sender = Member::with("profile")->find(auth()->id());
         $recipientId = $request->recipientId;
 
         $messageRequestExists = MessageRequest::where(function ($query) use ($sender, $recipientId) {
-            $query->where('sender_id', $sender->id)
-                ->where('recipient_id', $recipientId)
-                ->where('status', '!=', 'declined');
+            $query->where("sender_id", $sender->id)->where("recipient_id", $recipientId)->where("status", "!=", "declined");
         })
             ->orWhere(function ($query) use ($sender, $recipientId) {
-                $query->where('sender_id', $recipientId)
-                    ->where('recipient_id', $sender->id)
-                    ->where('status', '!=', 'declined');
+                $query->where("sender_id", $recipientId)->where("recipient_id", $sender->id)->where("status", "!=", "declined");
             })
             ->exists();
 
         $messageRequestSelf = $sender->id == $recipientId;
 
         if ($messageRequestSelf) {
-            return response()->json([
-                'message' => 'No! Who the hell want to message themselves?'
-            ], Response::HTTP_FORBIDDEN);
+            return response()->json(
+                [
+                    "message" => "No! Who the hell want to message themselves?",
+                ],
+                Response::HTTP_FORBIDDEN
+            );
         }
 
         if ($messageRequestExists) {
-            return response()->json([
-                'message' => 'Message request already exists.'
-            ], Response::HTTP_CONFLICT);
+            return response()->json(
+                [
+                    "message" => "Message request already exists.",
+                ],
+                Response::HTTP_CONFLICT
+            );
         }
 
         $messageRequest = MessageRequest::create([
-            'sender_id' => $sender->id,
-            'recipient_id' => $recipientId,
-            'status' => 'pending',
+            "sender_id" => $sender->id,
+            "recipient_id" => $recipientId,
+            "status" => "pending",
         ]);
 
         //event(new MessageRequestSent($sender, $recipientId));
         broadcast(new MessageRequestSent($messageRequest->id, $sender, $recipientId))->toOthers();
-        return response()->json([
-            'message' => 'Message request sent!',
-        ], Response::HTTP_CREATED);
+        return response()->json(
+            [
+                "message" => "Message request sent!",
+            ],
+            Response::HTTP_CREATED
+        );
     }
 
     public function acceptMessageRequest(Request $request): JsonResponse
     {
         $request->validate([
-            'id' => 'required|integer|exists:pgsql.message_requests,id',
+            "id" => "required|integer|exists:pgsql.message_requests,id",
         ]);
 
         $id = $request->id;
 
-        $messageRequest = MessageRequest::where('id', $id)
-            ->where('status', 'pending')
-            ->first();
+        $messageRequest = MessageRequest::where("id", $id)->where("status", "pending")->first();
 
         if (!$messageRequest) {
-            return response()->json([
-                'message' => 'Message request not found.'
-            ], Response::HTTP_NOT_FOUND);
+            return response()->json(
+                [
+                    "message" => "Message request not found.",
+                ],
+                Response::HTTP_NOT_FOUND
+            );
         }
 
         $messageRequest->update([
-            'status' => 'accepted'
+            "status" => "accepted",
         ]);
 
         $chat = Chat::create([
-            'chat_type' => 'direct',
-            'name' => null,
+            "chat_type" => "direct",
+            "name" => null,
         ]);
 
         // Add both participants
         ChatParticipant::create([
-            'chat_id' => $chat->id,
-            'user_id' => $messageRequest->sender_id,
-            'role' => 'member',
+            "chat_id" => $chat->id,
+            "user_id" => $messageRequest->sender_id,
+            "role" => "member",
         ]);
 
         ChatParticipant::create([
-            'chat_id' => $chat->id,
-            'user_id' => $messageRequest->recipient_id,
-            'role' => 'member',
+            "chat_id" => $chat->id,
+            "user_id" => $messageRequest->recipient_id,
+            "role" => "member",
         ]);
 
         // Broadcast chat creation event
         broadcast(new ChatCreated($chat, [$messageRequest->sender_id, $messageRequest->recipient_id]));
-        
-        return response()->json([
-            'message' => 'Message request accepted.',
-        ], Response::HTTP_OK);
+
+        return response()->json(
+            [
+                "message" => "Message request accepted.",
+            ],
+            Response::HTTP_OK
+        );
     }
 
     public function declineMessageRequest(Request $request): JsonResponse
     {
         $request->validate([
-            'id' => 'required|integer|exists:pgsql.message_requests,id',
+            "id" => "required|integer|exists:pgsql.message_requests,id",
         ]);
 
         $id = $request->id;
 
-        $messageRequest = MessageRequest::where('id', $id)
-            ->where('status', 'pending')
-            ->first();
+        $messageRequest = MessageRequest::where("id", $id)->where("status", "pending")->first();
 
         if (!$messageRequest) {
-            return response()->json([
-                'message' => 'Message request not found.'
-            ], Response::HTTP_NOT_FOUND);
+            return response()->json(
+                [
+                    "message" => "Message request not found.",
+                ],
+                Response::HTTP_NOT_FOUND
+            );
         }
 
         $messageRequest->update([
-            'status' => 'declined'
+            "status" => "declined",
         ]);
 
-        return response()->json([
-            'message' => 'Message request declined.',
-        ], Response::HTTP_OK);
+        return response()->json(
+            [
+                "message" => "Message request declined.",
+            ],
+            Response::HTTP_OK
+        );
     }
 }

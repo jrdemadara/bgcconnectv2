@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Chat;
 
-use App\Events\ChatMessageSent;
+use App\Events\MessageRead;
+use App\Events\MessageSent;
 use App\Http\Controllers\Controller;
-use App\Models\Chat;
 use App\Models\ChatParticipant;
 use App\Models\Message;
-use App\Models\MessageRequest;
+use App\Models\MessageStatus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +18,7 @@ class ChatController extends Controller
     public function sendChat(Request $request): JsonResponse
     {
         $request->validate([
+            "localId" => "required|integer",
             "chatId" => "required|integer|exists:pgsql.chats,id",
             "content" => "required|string|max:5000",
             "messageType" => "required|in:text,image,video,file",
@@ -44,9 +45,9 @@ class ChatController extends Controller
             // "reply_to" => $request->replyTo,
         ]);
 
-        // Optionally update message_status for all participants
         $participantIds = ChatParticipant::where("chat_id", $chatId)->pluck("user_id");
 
+        $senderStatus = null;
         $receiverStatus = null;
 
         foreach ($participantIds as $userId) {
@@ -60,9 +61,16 @@ class ChatController extends Controller
                     "status" => $status,
                 ]);
 
-            // Save only the receiver's status to broadcast
             if ($userId != $senderId) {
                 $receiverStatus = [
+                    "id" => $insertedId,
+                    "message_id" => $message->id,
+                    "user_id" => $userId,
+                    "status" => $status,
+                    "updated_at" => now()->toIso8601String(),
+                ];
+            } else {
+                $senderStatus = [
                     "id" => $insertedId,
                     "message_id" => $message->id,
                     "user_id" => $userId,
@@ -72,16 +80,38 @@ class ChatController extends Controller
             }
         }
 
-        // Broadcast message and only receiver's status
         if ($receiverStatus) {
-            broadcast(new ChatMessageSent($message, $receiverStatus));
+            broadcast(new MessageSent($message, $receiverStatus, $request->localId));
         }
 
         return response()->json(
             [
-                "message" => "Message sent successfully",
+                "message" => "success",
             ],
             Response::HTTP_CREATED
         );
+    }
+
+    public function messageRead(Request $request)
+    {
+        $request->validate([
+            "chat_id" => "required|integer|exists:pgsql.chats,id",
+            "message_id" => "required|integer|exists:pgsql.messages,id",
+        ]);
+
+        $user = auth()->user();
+
+        MessageStatus::where("message_id", $request->message_id)
+            ->where("user_id", $user->id)
+            ->update(["status" => "read"]);
+
+        $senderId = Message::where("id", $request->message_id)->value("sender_id");
+
+        // Broadcast to sender
+        if ($senderId && $senderId != $user->id) {
+            broadcast(new MessageRead($request->chat_id, $senderId, $user->id, [$request->message_id]))->toOthers();
+        }
+
+        return response()->json(["status" => "ok"]);
     }
 }
