@@ -3,38 +3,32 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Models\Contracts\FilamentUser;
+use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class SuperAdmin extends Authenticatable implements FilamentUser 
 {
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
      *
-     * @var list<string>
+     * @var array<int, string>
      */
+    protected $table = "superadmins";
     protected $fillable = [
-        'id',
-        'code',
-        'phone',
-        'verification_code',
-        'phone_verified_at',
+        'name',
+        'email',
         'password',
-        'referred_by',
-        'points',
-        'level',
-        'is_active',
-        'id_status',
     ];
 
     /**
      * The attributes that should be hidden for serialization.
      *
-     * @var list<string>
+     * @var array<int, string>
      */
     protected $hidden = [
         'password',
@@ -53,12 +47,8 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-    public function profile()
-    {
-        return $this->hasOne(Profiles::class, 'user_id', 'id');
+
+    public function canAccessPanel(\Filament\Panel $panel): bool{
+        return true;
     }
-    public function referrer()
-{
-    return $this->belongsTo(User::class, 'referred_by', 'id');
-}
 }
