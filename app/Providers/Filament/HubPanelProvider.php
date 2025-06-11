@@ -28,6 +28,8 @@ class HubPanelProvider extends PanelProvider
             ->id('hub')
             ->path('hub')
             ->login()
+             ->font('roboto mono')
+            ->sidebarFullyCollapsibleOnDesktop()
             ->colors([
                 'danger' => Color::Red,
                 'gray' => Color::Zinc,
@@ -45,6 +47,7 @@ class HubPanelProvider extends PanelProvider
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
+                
             ])
             ->middleware([
                 EncryptCookies::class,

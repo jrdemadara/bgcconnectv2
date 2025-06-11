@@ -51,4 +51,20 @@ class Profile extends Model
     {
         return $this->belongsTo(Member::class);
     }
+    public function getBrgyDescriptionAttribute()
+    {
+        return Barangay::where('brgyCode', $this->barangay)->value('brgyDescription');
+    }
+    public function getCityDescriptionAttribute()
+    {
+        return Municipality::where('citymunCode', $this->municipality_city)->value('citymunDescription');
+    }
+    public function getProvDescriptionAttribute()
+    {
+        return Province::where('provCode', $this->province)->value('provDescription');
+    }
+    public function getRegDescriptionAttribute()
+    {
+        return Region::where('regCode', $this->region)->value('regDescription');
+    }
 }
