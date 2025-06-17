@@ -18,16 +18,17 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'code',
-        'phone',
-        'verification_code',
-        'phone_verified_at',
-        'password',
-        'referred_by',
-        'points',
-        'level',
-        'is_active',
-        'id_status',
+        "code",
+        "phone",
+        "verification_code",
+        "phone_verified_at",
+        "password",
+        "referred_by",
+        "points",
+        "level",
+        "is_active",
+        "id_status",
+        "fmc_token",
     ];
 
     /**
@@ -35,10 +36,7 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $hidden = ["password", "remember_token"];
 
     /**
      * Get the attributes that should be cast.
@@ -48,8 +46,8 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            "email_verified_at" => "datetime",
+            "password" => "hashed",
         ];
     }
 }
