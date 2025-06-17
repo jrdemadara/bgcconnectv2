@@ -21,9 +21,7 @@ class GroupChatController extends Controller
         ]);
 
         // Check group name is exists
-        $isGroupExists = Chat::where("name", $$request->groupChatName)->exists();
-
-        if (isGroupExists) {
+        if (Chat::where("name", $request->groupChatName)->exists()) {
             return response()->json(
                 [
                     "message" => "error",

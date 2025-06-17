@@ -12,8 +12,11 @@ use App\Models\ChatParticipant;
 use App\Models\Member;
 use App\Models\MessageRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Kreait\Firebase\Messaging\Notification;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Kreait\Firebase\Messaging\CloudMessage;
 
 class MessageRequestController extends Controller
 {
@@ -25,12 +28,22 @@ class MessageRequestController extends Controller
 
         $sender = Member::with("profile")->find(auth()->id());
         $recipientId = $request->recipientId;
+        $recipient = Member::find($recipientId);
 
-        $messageRequestExists = MessageRequest::where(function ($query) use ($sender, $recipientId) {
-            $query->where("sender_id", $sender->id)->where("recipient_id", $recipientId)->where("status", "!=", "declined");
+        $messageRequestExists = MessageRequest::where(function ($query) use (
+            $sender,
+            $recipientId
+        ) {
+            $query
+                ->where("sender_id", $sender->id)
+                ->where("recipient_id", $recipientId)
+                ->where("status", "!=", "declined");
         })
             ->orWhere(function ($query) use ($sender, $recipientId) {
-                $query->where("sender_id", $recipientId)->where("recipient_id", $sender->id)->where("status", "!=", "declined");
+                $query
+                    ->where("sender_id", $recipientId)
+                    ->where("recipient_id", $sender->id)
+                    ->where("status", "!=", "declined");
             })
             ->exists();
 
@@ -62,6 +75,29 @@ class MessageRequestController extends Controller
 
         //event(new MessageRequestSent($sender, $recipientId));
         broadcast(new MessageRequestSent($messageRequest->id, $sender, $recipientId))->toOthers();
+
+        $messaging = app("firebase.messaging");
+        $message = CloudMessage::new()
+            ->withNotification(
+                Notification::create("Message Request", "Johnny sent you a message request.")
+            )
+            ->withData([
+                "sender_id" => auth()->id(),
+                "firstname" => $sender->profile->firstname ?? "",
+                "lastname" => $sender->profile->lastname ?? "",
+                "avatar" => $sender->profile->avatar
+                    ? Storage::temporaryUrl($sender->profile->avatar, now()->addDays(5))
+                    : null,
+
+                "id" => $messageRequest->id,
+                "status" => "pending",
+                "requested_at" => now()->toIso8601String(),
+            ])
+            ->toToken($recipient->fcm_token);
+        //->toTopic("message-request");
+        // ->toCondition('...')
+
+        $messaging->send($message);
         return response()->json(
             [
                 "message" => "Message request sent!",
@@ -112,7 +148,9 @@ class MessageRequestController extends Controller
         ]);
 
         // Broadcast chat creation event
-        broadcast(new ChatCreated($chat, [$messageRequest->sender_id, $messageRequest->recipient_id]));
+        broadcast(
+            new ChatCreated($chat, [$messageRequest->sender_id, $messageRequest->recipient_id])
+        );
 
         return response()->json(
             [

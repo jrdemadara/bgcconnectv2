@@ -8,7 +8,12 @@
     "require": {
         "php": "^8.2",
         "aws/aws-sdk-php": "^3.342",
+<<<<<<< HEAD
+        "filament/filament": "^3.2",
+        "kreait/laravel-firebase": "^6.0",
+=======
         "filament/filament": "^3.3",
+>>>>>>> fa3efd87d225c0c644e21c19b6a1c3a5d7b7432e
         "laravel/framework": "^12.0",
         "laravel/reverb": "^1.0",
         "laravel/sanctum": "^4.0",

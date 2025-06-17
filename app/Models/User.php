@@ -18,6 +18,19 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+<<<<<<< HEAD
+        "code",
+        "phone",
+        "verification_code",
+        "phone_verified_at",
+        "password",
+        "referred_by",
+        "points",
+        "level",
+        "is_active",
+        "id_status",
+        "fmc_token",
+=======
         'id',
         'code',
         'phone',
@@ -29,6 +42,7 @@ class User extends Authenticatable
         'level',
         'is_active',
         'id_status',
+>>>>>>> fa3efd87d225c0c644e21c19b6a1c3a5d7b7432e
     ];
 
     /**
@@ -36,10 +50,7 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $hidden = ["password", "remember_token"];
 
     /**
      * Get the attributes that should be cast.
@@ -49,8 +60,8 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            "email_verified_at" => "datetime",
+            "password" => "hashed",
         ];
     }
     public function profile()

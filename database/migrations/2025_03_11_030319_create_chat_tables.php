@@ -25,10 +25,10 @@ return new class extends Migration {
             $table->integer("user_id");
             $table->enum("role", ["member", "admin"])->nullable();
             $table->timestamp("joined_at")->useCurrent();
+            $table->boolean("is_joined")->default(false);
             $table->unique(["chat_id", "user_id"]);
             $table->timestamps();
             $table->softDeletes();
-
             // Add index to speed up lookups
             $table->index(["chat_id", "user_id"]);
         });
