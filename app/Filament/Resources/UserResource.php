@@ -2,42 +2,32 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Forms;
+
 use App\Models\User;
-use Filament\Tables;
+
+
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
-use Filament\Infolists\Components\View;
-use Filament\Support\Colors\Color;
-use function Laravel\Prompts\text;
+use App\Infolists\Components\overview;
+use Filament\Forms\Components\Tabs\Tab;
 use Filament\Infolists\Components\Grid;
 use Filament\Infolists\Components\Tabs;
-use Filament\Infolists\Components\Tabs\Tab;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Support\Enums\IconPosition;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
-use Illuminate\Database\Eloquent\Builder;
 use Filament\Infolists\Components\Section;
-use Filament\Tables\Columns\BooleanColumn;
-use Filament\Infolists\Components\Repeater;
-use Filament\Tables\Columns\DateTimeColumn;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\ViewEntry;
+use Filament\Infolists\Components\ImageEntry;
 use App\Filament\Resources\UserResource\Pages;
-use Filament\Infolists\Components\ProgressBar;
-use Filament\Infolists\Components\RepeatableEntry;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Resources\UserResource\RelationManagers;
-use App\Infolists\Components\Overview;
 
 class UserResource extends Resource
 {
-    
+
     public static function canCreate(): bool
     {
         return false;
@@ -56,91 +46,100 @@ class UserResource extends Resource
 
     public static function table(Table $table): Table
     {
-        
+
         return $table
             ->recordUrl(null)
             ->columns([
-                TextColumn::make('full_name')
-                                ->label('Full Name')
-                                ->width(0)
-                                ->getStateUsing(fn ($record) => Str::title(Str::of(
-                                    ($record->profile?->lastname ?? '') . ', ' .
-                                    ($record->profile?->firstname ?? '') . ' ' .
-                                    ($record->profile?->middlename ?? '') . ' ' .
-                                    ($record->profile?->extension ?? '')
-                                )->squish()->toString())),
+                TextColumn::make('profile.lastname')
+                    ->label('Last Name')
+                    ->searchable()
+                    ->formatStateUsing(fn($state) => Str::title($state)),
+
+                TextColumn::make('profile.firstname')
+                    ->label('First Name')
+                    ->searchable()
+                    ->formatStateUsing(fn($state) => Str::title($state)),
+
+                TextColumn::make('profile.middlename')
+                    ->label('Middle Name')
+                    ->searchable()
+                    ->formatStateUsing(fn($state) => Str::title($state)),
+
+                TextColumn::make('profile.extension')
+                    ->label('Extension')
+                    ->searchable()
+                    ->formatStateUsing(fn($state) => Str::title($state)),
                 TextColumn::make('code')->label('Code'),
                 TextColumn::make('phone')->label('Phone'),
                 TextColumn::make('referrer_full_name')
-                        ->label('Referred By')
-                        ->getStateUsing(function ($record) {
-                            $first = $record->referrer?->profile?->firstname;
-                            $last = $record->referrer?->profile?->lastname;
+                    ->label('Referred By')
+                    ->getStateUsing(function ($record) {
+                        $first = $record->referrer?->profile?->firstname;
+                        $last = $record->referrer?->profile?->lastname;
 
-                            if (!$first && !$last) {
-                                return null;
-                            }
+                        if (!$first && !$last) {
+                            return null;
+                        }
 
-                            return Str::title(trim("{$first} {$last}"));
-                        })
-                        ->default('N/A'),
+                        return Str::title(trim("{$first} {$last}"));
+                    })
+                    ->default('N/A'),
                 TextColumn::make('points')->label('Points'),
                 TextColumn::make('level')
-                        ->label('Verification')
-                        ->formatStateUsing(function ($state) {
-                            return match ($state) {
-                                1 => 'Registered',
-                                2 => 'Profiled',
-                                3 => 'OTP',
-                                4 => 'Valid ID',
-                                default => 'Unknown',
-                            };
-                        }),
-               ToggleColumn::make('is_active')
-                                    ->label('Active'),
-               TextColumn::make('id_status')
-                                ->label('Status')
-                                ->badge()
-                                ->color(fn ($state) => match ($state) {
-                                    1 => 'info',     // Unverified
-                                    2 => 'success',    // Verified
-                                    3 => 'danger',      // Denied
-                                    default => 'gray', // Undefined
-                                })
-                                ->formatStateUsing(fn ($state) => match ($state) {
-                                    1 => 'Unverified',
-                                    2 => 'Verified',
-                                    3 => 'Denied',
-                                    default => 'Undefined',
-                                }),
+                    ->label('Verification')
+                    ->formatStateUsing(function ($state) {
+                        return match ($state) {
+                            1 => 'Registered',
+                            2 => 'Profiled',
+                            3 => 'OTP',
+                            4 => 'Valid ID',
+                            default => 'Unknown',
+                        };
+                    }),
+                ToggleColumn::make('is_active')
+                    ->label('Active'),
+                TextColumn::make('id_status')
+                    ->label('Status')
+                    ->badge()
+                    ->sortable()
+                    ->color(fn($state) => match ($state) {
+                        1 => 'info',     // Unverified
+                        2 => 'success',    // Verified
+                        3 => 'danger',      // Denied
+                        default => 'gray', // Undefined
+                    })
+                    ->formatStateUsing(fn($state) => match ($state) {
+                        1 => 'Unverified',
+                        2 => 'Verified',
+                        3 => 'Denied',
+                        default => 'Undefined',
+                    }),
             ])
 
-            
+
             ->filters([
                 SelectFilter::make('level')
-                            ->label('Verification Level')
-                            ->options([
-                                1 => 'Registered',
-                                2 => 'Profiled',
-                                3 => 'OTP',
-                                4 => 'Valid ID',
-                            ]),
+                    ->label('Verification Level')
+                    ->options([
+                        1 => 'Registered',
+                        2 => 'Profiled',
+                        3 => 'OTP',
+                        4 => 'Valid ID',
+                    ]),
 
                 SelectFilter::make('id_status')
-                            ->label('ID Status')
-                            ->options([
-                                1 => 'Unverified',
-                                2 => 'Verified',
-                                3 => 'Denied',
-                            ]),
-                
+                    ->label('ID Status')
+                    ->options([
+                        1 => 'Unverified',
+                        2 => 'Verified',
+                        3 => 'Denied',
+                    ]),
+
             ])
             ->actions([
                 ViewAction::make(),
             ])
-            ->bulkActions([
-               
-            ]);
+            ->bulkActions([]);
     }
     public static function infolist(Infolist $infolist): Infolist
     {
@@ -151,9 +150,88 @@ class UserResource extends Resource
                     ->schema([
 
                         Tabs::make('User Info Tabs')
-                            
+
                             ->columnSpanFull()
                             ->tabs([
+                                Tabs\Tab::make('Test')
+                                    ->schema([
+                                        overview::make(),
+                                        
+                                    ]),
+                                Tabs\Tab::make('Overview')
+                                    ->schema([
+                                        Section::make('')
+                                            ->schema([
+                                                Section::make('')
+                                                    ->schema([
+                                                        ImageEntry::make('header_image')
+                                                            ->label('')
+                                                            ->default('https://i.pravatar.cc/150?img=12')
+                                                            ->size(200)
+                                                            ->circular()
+                                                            ->alignCenter(),
+                                                        TextEntry::make('Full Name')
+                                                            ->label('')
+                                                            ->size(TextEntry\TextEntrySize::Large)
+                                                            ->color('primary')
+
+                                                            ->getStateUsing(
+                                                                fn($record) =>
+                                                                Str::title(trim(
+                                                                    $record->profile?->firstname . ' ' .
+                                                                        $record->profile?->middlename . ' ' .
+                                                                        $record->profile?->lastname . ' ' .
+                                                                        $record->profile?->extension
+                                                                ))
+                                                            )
+                                                            ->alignCenter(),
+
+                                                        TextEntry::make('id_status')
+                                                            ->label('')
+                                                            ->badge()
+
+                                                            ->size(TextEntry\TextEntrySize::Large)
+                                                            ->color(fn($state) => match ($state) {
+                                                                1 => 'info',
+                                                                2 => 'success',
+                                                                3 => 'danger',
+                                                                default => 'gray',
+                                                            })
+                                                            ->formatStateUsing(fn($state) => match ($state) {
+                                                                1 => '🔍 Unverified',
+                                                                2 => ' ✅  Verified ',
+                                                                3 => '❌ Denied',
+                                                                default => '❓ Undefined',
+                                                            })
+                                                            ->alignCenter(),
+                                                    ]),
+
+                                                Section::make()
+                                                    ->extraAttributes(['class' => 'overflow-auto']) // Tailwind here
+                                                    ->schema([
+                                                        Grid::make(4)
+                                                            ->schema([
+                                                                TextEntry::make('')
+                                                                    ->label('Points')
+                                                                    ->color('success')
+
+                                                                    ->default(fn($record) => $record->points ?? 0),
+
+                                                                TextEntry::make('direct_referrals')
+                                                                    ->color('success')
+                                                                    ->default(fn($record) => $record->directReferrals()->count()),
+                                                                TextEntry::make('indirect_referrals')
+                                                                    ->color('success')
+                                                                    ->default(fn($record) => $record->indirectReferrals()->count()),
+                                                                TextEntry::make('events')
+                                                                    ->color('success')
+                                                                    ->default(0),
+
+                                                            ]),
+                                                    ])
+                                            ]),
+                                    ]),
+
                                 Tabs\Tab::make('Profile')
                                     ->icon('heroicon-m-identification')
                                     ->iconPosition(IconPosition::After)
@@ -163,12 +241,13 @@ class UserResource extends Resource
                                             ->schema([
                                                 TextEntry::make('full_name')
                                                     ->label('Full Name')
-                                                    ->getStateUsing(fn ($record) =>
+                                                    ->getStateUsing(
+                                                        fn($record) =>
                                                         Str::title(trim(
                                                             $record->profile?->firstname . ' ' .
-                                                            $record->profile?->middlename . ' ' .
-                                                            $record->profile?->lastname . ' ' .
-                                                            $record->profile?->extension
+                                                                $record->profile?->middlename . ' ' .
+                                                                $record->profile?->lastname . ' ' .
+                                                                $record->profile?->extension
                                                         ))
                                                     ),
                                                 TextEntry::make('code')->label('Code'),
@@ -189,7 +268,7 @@ class UserResource extends Resource
                                                 TextEntry::make('points')->label('Points'),
                                                 TextEntry::make('level')
                                                     ->label('Verification')
-                                                    ->formatStateUsing(fn ($state) => match ($state) {
+                                                    ->formatStateUsing(fn($state) => match ($state) {
                                                         1 => 'Registered',
                                                         2 => 'Profiled',
                                                         3 => 'OTP',
@@ -199,13 +278,13 @@ class UserResource extends Resource
                                                 TextEntry::make('id_status')
                                                     ->label('Status')
                                                     ->badge()
-                                                    ->color(fn ($state) => match ($state) {
+                                                    ->color(fn($state) => match ($state) {
                                                         1 => 'info',
                                                         2 => 'success',
                                                         3 => 'danger',
                                                         default => 'gray',
                                                     })
-                                                    ->formatStateUsing(fn ($state) => match ($state) {
+                                                    ->formatStateUsing(fn($state) => match ($state) {
                                                         1 => 'Unverified',
                                                         2 => 'Verified',
                                                         3 => 'Denied',
@@ -213,8 +292,8 @@ class UserResource extends Resource
                                                     }),
                                                 TextEntry::make('is_active')
                                                     ->label('Active')
-                                                    ->formatStateUsing(fn ($state) => $state ? 'Active' : 'Inactive')
-                                                    ->color(fn ($state) => $state ? 'success' : 'danger'),
+                                                    ->formatStateUsing(fn($state) => $state ? 'Active' : 'Inactive')
+                                                    ->color(fn($state) => $state ? 'success' : 'danger'),
                                             ]),
 
                                         Section::make('Personal Details')
@@ -224,8 +303,8 @@ class UserResource extends Resource
                                                 TextEntry::make('profile.middlename')->label('Middle Name'),
                                                 TextEntry::make('profile.lastname')->label('Last Name'),
                                                 TextEntry::make('profile.extension')
-                                                            ->label('Extension')
-                                                            ->default('N/A'),
+                                                    ->label('Extension')
+                                                    ->default('N/A'),
                                                 TextEntry::make('profile.gender')->label('Gender'),
                                                 TextEntry::make('profile.birthdate')->label('Birthdate'),
                                                 TextEntry::make('profile.civil_status')->label('Civil Status'),
@@ -267,32 +346,28 @@ class UserResource extends Resource
                                     ->icon('heroicon-m-user-group')
                                     ->iconPosition(IconPosition::After)
                                     ->schema([
-                                        
-                                        Section::make('Referral Counts')
-                                        ->columns(2)
-                                        ->schema([
-                                            TextEntry::make('direct_referrals_count')
-                                                ->label('Direct Referrals')
-                                                ->color('success')
-                                                ->getStateUsing(fn ($record) => $record->directReferrals()->count()),
 
-                                            TextEntry::make('indirect_referrals_count')
-                                                ->label('Indirect Referrals')
-                                                ->color('success')
-                                                ->getStateUsing(fn ($record) => $record->indirectReferrals()->count()),
-                                        ]),
+                                        Section::make('Referral Counts')
+                                            ->columns(2)
+                                            ->schema([
+                                                TextEntry::make('direct_referrals_count')
+                                                    ->label('Direct Referrals')
+                                                    ->color('success')
+                                                    ->getStateUsing(fn($record) => $record->directReferrals()->count()),
+
+                                                TextEntry::make('indirect_referrals_count')
+                                                    ->label('Indirect Referrals')
+                                                    ->color('success')
+                                                    ->getStateUsing(fn($record) => $record->indirectReferrals()->count()),
+                                            ]),
                                     ]),
-                                   
-                                    Tabs\Tab::make('Overview')
-                                                ->schema([
-                                                        Overview::make()
-                                                    ])
+
+
                             ])
                             ->contained(false)
                     ])
                     ->columnSpanFull(),
             ]);
-        
     }
     public static function getRelations(): array
     {
@@ -306,6 +381,7 @@ class UserResource extends Resource
         return [
             'index' => Pages\ListUsers::route('/'),
             'edit' => Pages\EditUser::route('/{record}/edit'),
-            'view' => Pages\ViewUser::route('/{record}'),];
+            'view' => Pages\ViewUser::route('/{record}'),
+        ];
     }
 }

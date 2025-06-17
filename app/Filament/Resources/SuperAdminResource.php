@@ -14,13 +14,13 @@ use Illuminate\Database\Eloquent\Builder;
 class SuperAdminResource extends Resource
 {
     public static function getNavigationBadgeTooltip(): ?string
-        {
-            return 'The number of users';
-        }
+    {
+        return 'The number of users';
+    }
     public static function getNavigationBadge(): ?string
-{
-    return static::getModel()::count();
-}
+    {
+        return static::getModel()::count();
+    }
     protected static ?string $navigationBadgeTooltip = 'The number of users';
     protected static ?string $model = SuperAdmin::class;
 
