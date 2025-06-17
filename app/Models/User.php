@@ -18,6 +18,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+<<<<<<< HEAD
         "code",
         "phone",
         "verification_code",
@@ -29,6 +30,19 @@ class User extends Authenticatable
         "is_active",
         "id_status",
         "fmc_token",
+=======
+        'id',
+        'code',
+        'phone',
+        'verification_code',
+        'phone_verified_at',
+        'password',
+        'referred_by',
+        'points',
+        'level',
+        'is_active',
+        'id_status',
+>>>>>>> fa3efd87d225c0c644e21c19b6a1c3a5d7b7432e
     ];
 
     /**
@@ -50,4 +64,37 @@ class User extends Authenticatable
             "password" => "hashed",
         ];
     }
+    public function profile()
+    {
+        return $this->hasOne(Profile::class, 'user_id', 'id');
+    }
+       
+
+        public function directReferrals()
+        {
+            return $this->hasManyThrough(
+                User::class,
+                Referral::class,
+                'referrer_id',
+                'id',
+                'id',
+                'referred_id'
+            );
+        }
+
+        public function indirectReferrals()
+        {
+            return User::whereIn('id', function ($query) {
+                $query->select('referred_id')
+                    ->from('referrals')
+                    ->whereIn('referrer_id', function ($query2) {
+                        $query2->select('referred_id')
+                                ->from('referrals')
+                                ->where('referrer_id', $this->id);
+                    });
+            });
+        }
+
+       
+     
 }
