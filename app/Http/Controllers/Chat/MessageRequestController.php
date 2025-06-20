@@ -74,7 +74,7 @@ class MessageRequestController extends Controller
         ]);
 
         //event(new MessageRequestSent($sender, $recipientId));
-        broadcast(new MessageRequestSent($messageRequest->id, $sender, $recipientId))->toOthers();
+        //broadcast(new MessageRequestSent($messageRequest->id, $sender, $recipientId))->toOthers();
 
         $messaging = app("firebase.messaging");
         $message = CloudMessage::new()
@@ -82,6 +82,7 @@ class MessageRequestController extends Controller
                 Notification::create("Message Request", "Johnny sent you a message request.")
             )
             ->withData([
+                "type" => "message-request",
                 "sender_id" => auth()->id(),
                 "firstname" => $sender->profile->firstname ?? "",
                 "lastname" => $sender->profile->lastname ?? "",
@@ -94,8 +95,6 @@ class MessageRequestController extends Controller
                 "requested_at" => now()->toIso8601String(),
             ])
             ->toToken($recipient->fcm_token);
-        //->toTopic("message-request");
-        // ->toCondition('...')
 
         $messaging->send($message);
         return response()->json(

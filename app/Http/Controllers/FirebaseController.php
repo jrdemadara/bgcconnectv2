@@ -12,18 +12,27 @@ class FirebaseController extends Controller
     public function updateFCMToken(Request $request): JsonResponse
     {
         $request->validate([
-            "fcmToken" => "required|string",
+            "fcm_token" => "required|string",
         ]);
 
-        $user = User::find(auth()->id);
-        $user->fcm_token = $request->fcmToken;
-        $user->save();
+        $user = User::find(auth()->id());
+
+        if ($user) {
+            $user->fcm_token = $request->fcm_token;
+            $user->save();
+            return response()->json(
+                [
+                    "message" => "FCM token updated",
+                ],
+                Response::HTTP_CREATED
+            );
+        }
 
         return response()->json(
             [
-                "message" => "success",
+                "message" => "error",
             ],
-            Response::HTTP_CREATED
+            Response::HTTP_NOT_FOUND
         );
     }
 }
