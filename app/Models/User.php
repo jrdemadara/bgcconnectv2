@@ -66,6 +66,7 @@ class User extends Authenticatable
         return $this->hasOne(Profile::class, "user_id", "id");
     }
 
+<<<<<<< HEAD
     public function directReferrals()
     {
         return $this->hasManyThrough(
@@ -92,4 +93,35 @@ class User extends Authenticatable
                 });
         });
     }
+=======
+
+    public function directReferrals()
+    {
+        return $this->hasManyThrough(
+            User::class,
+            Referral::class,
+            'referrer_id',
+            'id',
+            'id',
+            'referred_id'
+        );
+    }
+
+    public function indirectReferrals()
+    {
+        return User::whereIn('id', function ($query) {
+            $query->select('referred_id')
+                ->from('referrals')
+                ->whereIn('referrer_id', function ($query2) {
+                    $query2->select('referred_id')
+                        ->from('referrals')
+                        ->where('referrer_id', $this->id);
+                });
+        });
+    }
+    public function referrer()
+    {
+        return $this->belongsTo(User::class, 'referred_by');
+    }
+>>>>>>> f25abc5f00da603459bce557d47fb14f02be1d72
 }
