@@ -7,6 +7,7 @@ use Filament\Panel;
 use Filament\Widgets;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Navigation\NavigationGroup;
 use Filament\Http\Middleware\Authenticate;
 use App\Filament\Widgets\ActiveUsersWidget;
 use Illuminate\Session\Middleware\StartSession;
@@ -62,6 +63,20 @@ class HubPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+            ])
+            ->navigationGroups([
+                NavigationGroup::make()
+                    ->label('BGC CHAT')
+                    ->icon('heroicon-o-chat-bubble-left-right'), // chat/message icon
+                NavigationGroup::make()
+                    ->label('BGC Information')
+                    ->icon('heroicon-o-user-circle'), // user/profile icon
+                NavigationGroup::make()
+                    ->label('SUPER ADMIN SETTINGS')
+                    ->icon('heroicon-o-cog'), // user/profile icon
+                NavigationGroup::make()
+                    ->label('Events')
+                    ->icon('heroicon-o-calendar-days'), // user/profile icon
             ]);
     }
 }

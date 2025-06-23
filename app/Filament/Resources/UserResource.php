@@ -32,9 +32,14 @@ class UserResource extends Resource
     {
         return false;
     }
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
+    protected static ?string $navigationBadgeTooltip = 'The number of BGC users';
     protected static ?string $model = User::class;
-
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup = 'BGC Information';
+    // protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form
     {
@@ -50,25 +55,21 @@ class UserResource extends Resource
         return $table
             ->recordUrl(null)
             ->columns([
-                TextColumn::make('profile.lastname')
-                    ->label('Last Name')
-                    ->searchable()
-                    ->formatStateUsing(fn($state) => Str::title($state)),
-
-                TextColumn::make('profile.firstname')
-                    ->label('First Name')
-                    ->searchable()
-                    ->formatStateUsing(fn($state) => Str::title($state)),
-
-                TextColumn::make('profile.middlename')
-                    ->label('Middle Name')
-                    ->searchable()
-                    ->formatStateUsing(fn($state) => Str::title($state)),
-
-                TextColumn::make('profile.extension')
-                    ->label('Extension')
-                    ->searchable()
-                    ->formatStateUsing(fn($state) => Str::title($state)),
+                TextColumn::make('profile') // just a dummy placeholder
+                    ->label('Full Name')
+                    ->searchable(query: function ($query, $search) {
+                        $query->orWhereHas('profile', function ($q) use ($search) {
+                            $q->where('lastname', 'like', "%{$search}%")
+                                ->orWhere('firstname', 'like', "%{$search}%")
+                                ->orWhere('middlename', 'like', "%{$search}%");
+                        });
+                    })
+                    ->formatStateUsing(function ($state, $record) {
+                        $profile = $record->profile;
+                        if (!$profile)
+                            return null;
+                        return Str::title(trim("{$profile->lastname} {$profile->firstname} {$profile->middlename}"));
+                    }),
                 TextColumn::make('code')->label('Code'),
                 TextColumn::make('phone')->label('Phone'),
                 TextColumn::make('referrer_full_name')
@@ -153,11 +154,7 @@ class UserResource extends Resource
 
                             ->columnSpanFull()
                             ->tabs([
-                                Tabs\Tab::make('Test')
-                                    ->schema([
-                                        overview::make(),
-                                        
-                                    ]),
+
                                 Tabs\Tab::make('Overview')
                                     ->schema([
                                         Section::make('')
@@ -179,9 +176,9 @@ class UserResource extends Resource
                                                                 fn($record) =>
                                                                 Str::title(trim(
                                                                     $record->profile?->firstname . ' ' .
-                                                                        $record->profile?->middlename . ' ' .
-                                                                        $record->profile?->lastname . ' ' .
-                                                                        $record->profile?->extension
+                                                                    $record->profile?->middlename . ' ' .
+                                                                    $record->profile?->lastname . ' ' .
+                                                                    $record->profile?->extension
                                                                 ))
                                                             )
                                                             ->alignCenter(),
@@ -245,9 +242,9 @@ class UserResource extends Resource
                                                         fn($record) =>
                                                         Str::title(trim(
                                                             $record->profile?->firstname . ' ' .
-                                                                $record->profile?->middlename . ' ' .
-                                                                $record->profile?->lastname . ' ' .
-                                                                $record->profile?->extension
+                                                            $record->profile?->middlename . ' ' .
+                                                            $record->profile?->lastname . ' ' .
+                                                            $record->profile?->extension
                                                         ))
                                                     ),
                                                 TextEntry::make('code')->label('Code'),
