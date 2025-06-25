@@ -3,6 +3,7 @@
 namespace App\Events;
 
 use App\Models\Member;
+use App\Models\MessageRequest;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -14,20 +15,18 @@ class MessageRequestSent implements ShouldBroadcastNow
 {
     use InteractsWithSockets, SerializesModels;
 
-    public int $id;
     public Member $sender;
-    public int $recipientId;
+    public MessageRequest $messageRequest;
 
-    public function __construct(int $id, Member $sender, int $recipientId)
+    public function __construct(Member $sender, MessageRequest $messageRequest)
     {
-        $this->id = $id;
         $this->sender = $sender;
-        $this->recipientId = $recipientId;
+        $this->messageRequest = $messageRequest;
     }
 
     public function broadcastOn(): Channel
     {
-        return new PrivateChannel("user.$this->recipientId");
+        return new PrivateChannel("user.{$this->messageRequest->recipient_id}");
     }
 
     public function broadcastAs(): string
@@ -44,11 +43,13 @@ class MessageRequestSent implements ShouldBroadcastNow
                 "id" => $this->sender->id,
                 "firstname" => $profile->firstname ?? "",
                 "lastname" => $profile->lastname ?? "",
-                "avatar" => $profile->avatar ? Storage::temporaryUrl($profile->avatar, now()->addDays(5)) : null,
+                "avatar" => $profile->avatar
+                    ? Storage::temporaryUrl($profile->avatar, now()->addDays(5))
+                    : null,
             ],
-            "id" => $this->id,
+            "id" => $this->messageRequest->id,
             "status" => "pending",
-            "requested_at" => now()->toIso8601String(),
+            "requested_at" => $this->messageRequest->created_at->toIso8601String(),
         ];
     }
 }

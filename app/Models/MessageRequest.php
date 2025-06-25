@@ -7,15 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MessageRequest extends Model
 {
     use HasFactory, Notifiable, HasApiTokens, SoftDeletes;
 
-    protected $connection = 'pgsql';
-    protected $fillable = [
-        'sender_id',
-        'recipient_id',
-        'status',
-    ];
+    protected $connection = "pgsql";
+    protected $fillable = ["sender_id", "recipient_id", "status"];
 }

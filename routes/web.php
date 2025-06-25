@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-<<<<<<< HEAD
 use App\Http\Controllers\ProfileController;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
@@ -20,11 +19,7 @@ Route::get("/", function () {
 });
 
 Route::get("/municipality/{citymunCode}", [ProfileController::class, "showMunicipality"]);
-=======
 
-Route::get('/', function () {
-    return view('welcome');
+Route::get("/", function () {
+    return view("welcome");
 });
-
-
->>>>>>> f25abc5f00da603459bce557d47fb14f02be1d72

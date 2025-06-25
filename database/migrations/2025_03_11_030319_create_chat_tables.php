@@ -21,7 +21,7 @@ return new class extends Migration {
         // Chat Participants
         Schema::create("chat_participants", function (Blueprint $table) {
             $table->id();
-            $table->foreignId("chat_id")->constrained()->onDelete("cascade");
+            $table->foreignId("chat_id")->constrained("chats")->onDelete("cascade");
             $table->integer("user_id");
             $table->enum("role", ["member", "admin"])->nullable();
             $table->timestamp("joined_at")->useCurrent();
@@ -37,7 +37,7 @@ return new class extends Migration {
         Schema::create("messages", function (Blueprint $table) {
             $table->id();
             $table->integer("sender_id");
-            $table->foreignId("chat_id")->constrained()->onDelete("cascade");
+            $table->foreignId("chat_id")->constrained("chats")->onDelete("cascade");
             $table->text("content");
             $table->enum("message_type", ["text", "image", "video", "file"])->default("text");
             $table->foreignId("reply_to")->nullable()->constrained("messages")->nullOnDelete();
@@ -51,7 +51,7 @@ return new class extends Migration {
         // Message Status
         Schema::create("message_status", function (Blueprint $table) {
             $table->id();
-            $table->foreignId("message_id")->constrained()->onDelete("cascade");
+            $table->foreignId("message_id")->constrained("messages")->onDelete("cascade");
             $table->integer("user_id");
             $table->enum("status", ["sent", "delivered", "read"])->default("sent");
             $table->timestamp("updated_at")->useCurrent()->useCurrentOnUpdate();
