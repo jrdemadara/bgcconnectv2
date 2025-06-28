@@ -14,9 +14,9 @@ return new class extends Migration {
             $table->foreignId("message_id")->constrained("messages")->onDelete("cascade");
             $table->integer("user_id");
             $table->string("reaction");
-            $table->timestamp("updated_at")->useCurrent()->useCurrentOnUpdate();
             $table->unique(["message_id", "user_id"]);
             $table->index(["message_id", "user_id"]);
+            $table->timestamp();
             $table->softDeletes();
         });
     }

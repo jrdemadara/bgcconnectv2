@@ -23,8 +23,8 @@ class SuperAdminResource extends Resource
     }
     protected static ?string $navigationBadgeTooltip = 'The number of users';
     protected static ?string $model = SuperAdmin::class;
-
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup = 'SUPER ADMIN SETTINGS';
+   // protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form
     {

@@ -13,7 +13,7 @@ use Laravel\Sanctum\HasApiTokens;
 class Profile extends Model
 {
     use HasFactory, Notifiable, HasApiTokens;
-
+    protected $connection = 'mysql';
     protected $table = 'profiles';
     protected $fillable = [
         'lastname',
@@ -66,5 +66,15 @@ class Profile extends Model
     public function getRegDescriptionAttribute()
     {
         return Region::where('regCode', $this->region)->value('regDescription');
+    }
+
+    public function profile()
+    {
+        return $this->belongsTo(\App\Models\Profile::class, 'user_id', 'user_id')
+            ->setConnection('mysql'); // <-- set correct connection name
+    }
+    public function getFullNameAttribute()
+    {
+        return trim("{$this->lastname} {$this->firstname} {$this->middlename}");
     }
 }
