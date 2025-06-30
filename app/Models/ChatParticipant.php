@@ -25,4 +25,8 @@ class ChatParticipant extends Model
     {
         return $this->belongsTo(Chat::class);
     }
+    public function profile()
+    {
+        return Profile::on('mysql')->where('user_id', $this->user_id)->first();
+    }
 }

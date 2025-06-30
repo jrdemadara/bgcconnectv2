@@ -8,6 +8,7 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class ActiveUsers extends BaseWidget
 {
+    protected static ?int $sort = 1;
     protected function getStats(): array
     {
         $active = User::where('is_active', true)->count();

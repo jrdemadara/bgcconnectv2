@@ -55,6 +55,8 @@ class UserResource extends Resource
         return $table
             ->recordUrl(null)
             ->columns([
+                TextColumn::make('id')->label('User Id')
+                    ->searchable(),
                 TextColumn::make('profile') // just a dummy placeholder
                     ->label('Full Name')
                     ->searchable(query: function ($query, $search) {
@@ -68,7 +70,7 @@ class UserResource extends Resource
                         $profile = $record->profile;
                         if (!$profile)
                             return null;
-                        return Str::title(trim("{$profile->lastname} {$profile->firstname} {$profile->middlename}"));
+                        return Str::title(trim("{$profile->lastname}, {$profile->firstname} {$profile->middlename}"));
                     }),
                 TextColumn::make('code')->label('Code'),
                 TextColumn::make('phone')->label('Phone'),

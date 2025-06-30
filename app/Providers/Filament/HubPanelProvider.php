@@ -29,6 +29,9 @@ class HubPanelProvider extends PanelProvider
             ->id('hub')
             ->path('hub')
             ->login()
+            ->brandLogo(asset('images/logo.png'))
+            ->brandName('BGC CONNECT')
+            ->favicon(asset('images/logo.png'))
             ->font('Roboto Mono')
             ->sidebarFullyCollapsibleOnDesktop()
             ->colors([

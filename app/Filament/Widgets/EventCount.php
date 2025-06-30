@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 class EventCount extends ChartWidget
 {
     protected static ?string $heading = 'Activity Attendees Per Day';
+    protected static ?int $sort = 3;
+    protected int|string|array $columnSpan = 'full';
 
     protected function getType(): string
     {
@@ -27,9 +29,9 @@ class EventCount extends ChartWidget
 
         // Query count of attendees grouped by date for last 30 days
         $data = ActivityAttendees::select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('COUNT(*) as count')
-            )
+            DB::raw('DATE(created_at) as date'),
+            DB::raw('COUNT(*) as count')
+        )
             ->where('created_at', '>=', Carbon::today()->subDays(29))
             ->groupBy('date')
             ->orderBy('date')

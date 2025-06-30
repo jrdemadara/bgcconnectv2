@@ -67,7 +67,7 @@ class ActivityAttendeesResource extends Resource
                         $profile = $record->profile;
                         if (!$profile)
                             return null;
-                        return Str::title(trim("{$profile->lastname} {$profile->firstname} {$profile->middlename}"));
+                        return Str::title(trim("{$profile->lastname}, {$profile->firstname} {$profile->middlename}"));
                     }),
                 Tables\Columns\TextColumn::make('activity.name')
                     ->numeric()

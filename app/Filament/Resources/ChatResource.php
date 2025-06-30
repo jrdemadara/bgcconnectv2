@@ -27,13 +27,14 @@ class ChatResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->maxLength(255),
                 Select::make('chat_type')
-                    ->required()
+                    ->label('Chat Type')
                     ->options([
                         'topic' => 'Topic',
                         'direct' => 'Direct',
                         'group' => 'Group',
                     ])
-                    ->label('Chat Type'),
+                    ->default('topic')
+                    ->disabled()
 
             ]);
     }
@@ -65,12 +66,13 @@ class ChatResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(fn($record) => $record->chat_type === 'topic'),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                // Tables\Actions\BulkActionGroup::make([
+                //     Tables\Actions\DeleteBulkAction::make(),
+                // ]),
             ]);
     }
 

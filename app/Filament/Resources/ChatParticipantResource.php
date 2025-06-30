@@ -5,12 +5,21 @@ namespace App\Filament\Resources;
 use Log;
 use Filament\Forms;
 use Filament\Tables;
+use App\Models\Profile;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
 use App\Models\ChatParticipant;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
+use Filament\Infolists\Components\Grid;
+use Filament\Tables\Columns\TextColumn;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Tables\Columns\ToggleColumn;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\Fieldset;
+use Filament\Infolists\Components\TextEntry;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\ChatParticipantResource\Pages;
 use App\Filament\Resources\ChatParticipantResource\RelationManagers;
@@ -21,6 +30,10 @@ class ChatParticipantResource extends Resource
     protected static ?string $navigationGroup = 'BGC CHAT';
     // protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     public static function canCreate(): bool
+    {
+        return false;
+    }
+    public static function canEdit(Model $record): bool
     {
         return false;
     }
@@ -51,23 +64,34 @@ class ChatParticipantResource extends Resource
                 Tables\Columns\TextColumn::make('chat.name')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('user_id'),
+                TextColumn::make('user_full_name')
+                    ->label('Full Name')
+                    ->getStateUsing(function ($record) {
+                        $profile = Profile::on('mysql')->where('user_id', $record->user_id)->first();
 
-                Tables\Columns\TextColumn::make('role')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('joined_at')
-                    ->dateTime()
-                    ->sortable(),
+                        if (!$profile) {
+                            return null;
+                        }
+
+                        return Str::title(trim("{$profile->lastname}, {$profile->firstname} {$profile->middlename}"));
+                    })
+                    ->searchable(false), // disable default search, optional
+
+                Tables\Columns\TextColumn::make('role'),
+
+
                 ToggleColumn::make('is_joined')
                     ->label('Joined')
                     ->onColor('success') // Green when ON
                     ->offColor('danger') // Red when OFF
                     ->sortable()
-                    ->visible(fn ($record) => $record && $record->chat && $record->chat->chat_type === 'topic'),
+                    ->visible(fn($record) => $record && $record->chat && $record->chat->chat_type === 'topic'),
                 Tables\Columns\TextColumn::make('chat.chat_type')
                     ->label('Chat Type')
-                    ->sortable()
-                    ->searchable(),
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('joined_at')
+                    ->dateTime()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -86,12 +110,77 @@ class ChatParticipantResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                //    Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                // Tables\Actions\BulkActionGroup::make([
+                //     Tables\Actions\DeleteBulkAction::make(),
+                // ]),
+            ]);
+    }
+
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Section::make('Chat Participant Info')
+                    ->schema([
+                        Fieldset::make('Participant Details')
+                            ->schema([
+                                Grid::make(2)->schema([
+                                    TextEntry::make('chat.name')
+                                        ->label('Chat Name'),
+
+                                    TextEntry::make('user_full_name')
+                                        ->label('Full Name')
+                                        ->getStateUsing(function ($record) {
+                                            $profile = \App\Models\Profile::on('mysql')->where('user_id', $record->user_id)->first();
+
+                                            if (!$profile) {
+                                                return null;
+                                            }
+
+                                            return Str::title(trim("{$profile->lastname}, {$profile->firstname} {$profile->middlename}"));
+                                        }),
+
+                                    TextEntry::make('role')
+                                        ->label('Role'),
+
+                                    TextEntry::make('is_joined')
+                                        ->label('Joined')
+                                        ->formatStateUsing(fn($state) => $state ? 'Yes' : 'No')
+                                        ->visible(fn($record) => $record->chat && $record->chat->chat_type === 'topic'),
+
+                                    TextEntry::make('chat.chat_type')
+                                        ->label('Chat Type'),
+                                ]),
+                            ]),
+                    ]),
+
+                Section::make('Timestamps')
+                    ->schema([
+                        Fieldset::make('Record Dates')
+                            ->schema([
+                                Grid::make(2)->schema([
+                                    TextEntry::make('joined_at')
+                                        ->label('Joined At')
+                                        ->dateTime(),
+
+                                    TextEntry::make('created_at')
+                                        ->label('Created At')
+                                        ->dateTime(),
+
+                                    TextEntry::make('updated_at')
+                                        ->label('Updated At')
+                                        ->dateTime(),
+
+                                    TextEntry::make('deleted_at')
+                                        ->label('Deleted At')
+                                        ->dateTime(),
+                                ]),
+                            ]),
+                    ]),
             ]);
     }
 
@@ -107,7 +196,7 @@ class ChatParticipantResource extends Resource
         return [
             'index' => Pages\ListChatParticipants::route('/'),
             'create' => Pages\CreateChatParticipant::route('/create'),
-            'view' => Pages\ViewChatParticipant::route('/{record}'),
+          //  'view' => Pages\ViewChatParticipant::route('/{record}'),
             'edit' => Pages\EditChatParticipant::route('/{record}/edit'),
         ];
     }
