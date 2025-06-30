@@ -17,6 +17,7 @@ use Kreait\Firebase\Messaging\Notification;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Kreait\Firebase\Messaging\CloudMessage;
+use Illuminate\Support\Str;
 
 class MessageRequestController extends Controller
 {
@@ -74,15 +75,20 @@ class MessageRequestController extends Controller
         ]);
 
         //event(new MessageRequestSent($sender, $recipientId));
-        //broadcast(new MessageRequestSent($messageRequest->id, $sender, $recipientId))->toOthers();
+        broadcast(new MessageRequestSent($sender, $messageRequest))->toOthers();
 
         $messaging = app("firebase.messaging");
         $message = CloudMessage::new()
-            ->withNotification(
-                Notification::create("Message Request", "Johnny sent you a message request.")
-            )
+            // ->withNotification(
+            //     Notification::create(
+            //         "Message Request",
+            //         Str::title("{$sender->profile->firstname}") . " sent you a message request."
+            //     )
+            // )
             ->withData([
                 "type" => "message-request",
+                "title" => "Message Request",
+                "body" => Str::title($sender->profile->firstname) . " sent you a message request.",
                 "sender_id" => auth()->id(),
                 "firstname" => $sender->profile->firstname ?? "",
                 "lastname" => $sender->profile->lastname ?? "",
@@ -92,7 +98,7 @@ class MessageRequestController extends Controller
 
                 "id" => $messageRequest->id,
                 "status" => "pending",
-                "requested_at" => now()->toIso8601String(),
+                "requested_at" => $messageRequest->created_at->toIso8601String(),
             ])
             ->toToken($recipient->fcm_token);
 
@@ -111,52 +117,97 @@ class MessageRequestController extends Controller
             "id" => "required|integer|exists:pgsql.message_requests,id",
         ]);
 
-        $id = $request->id;
-
-        $messageRequest = MessageRequest::where("id", $id)->where("status", "pending")->first();
+        $messageRequest = MessageRequest::where("id", $request->id)
+            ->where("status", "pending")
+            ->first();
 
         if (!$messageRequest) {
             return response()->json(
-                [
-                    "message" => "Message request not found.",
-                ],
+                ["message" => "Message request not found."],
                 Response::HTTP_NOT_FOUND
             );
         }
 
-        $messageRequest->update([
-            "status" => "accepted",
-        ]);
-
+        // Create new chat
         $chat = Chat::create([
             "chat_type" => "direct",
             "name" => null,
         ]);
 
-        // Add both participants
-        ChatParticipant::create([
-            "chat_id" => $chat->id,
-            "user_id" => $messageRequest->sender_id,
-            "role" => "member",
-        ]);
-
-        ChatParticipant::create([
-            "chat_id" => $chat->id,
-            "user_id" => $messageRequest->recipient_id,
-            "role" => "member",
-        ]);
-
-        // Broadcast chat creation event
-        broadcast(
-            new ChatCreated($chat, [$messageRequest->sender_id, $messageRequest->recipient_id])
-        );
-
-        return response()->json(
+        // Add participants
+        ChatParticipant::insert([
             [
-                "message" => "Message request accepted.",
+                "chat_id" => $chat->id,
+                "user_id" => $messageRequest->sender_id,
+                "role" => "member",
             ],
-            Response::HTTP_OK
+            [
+                "chat_id" => $chat->id,
+                "user_id" => $messageRequest->recipient_id,
+                "role" => "member",
+            ],
+        ]);
+
+        // Mark message request as accepted
+        $messageRequest->update(["status" => "accepted"]);
+
+        // Broadcast real-time chat creation
+        broadcast(
+            new ChatCreated($chat, $messageRequest->id, [
+                $messageRequest->sender_id,
+                $messageRequest->recipient_id,
+            ])
         );
+
+        $sender = Member::with("profile")->where("id", $messageRequest->sender_id)->first();
+
+        $recipient = Member::with("profile")->where("id", $messageRequest->recipient_id)->first();
+
+        $messaging = app("firebase.messaging");
+
+        // Send notification to sender
+        if ($sender && $sender->fcm_token) {
+            $messageToSender = CloudMessage::new()
+                ->withData([
+                    "type" => "chat-created",
+                    "title" => "Message Request Accepted",
+                    "body" =>
+                        Str::title($recipient->profile->firstname) .
+                        " accepted your message request.",
+                    "chat" => json_encode([
+                        "id" => $chat->id,
+                        "chat_type" => $chat->chat_type,
+                        "name" => $chat->name,
+                    ]),
+                    "participants" => json_encode([
+                        [
+                            "id" => $recipient->id,
+                            "firstname" => $recipient->profile->firstname,
+                            "lastname" => $recipient->profile->lastname,
+                            "avatar" => $recipient->profile->avatar
+                                ? Storage::temporaryUrl(
+                                    $recipient->profile->avatar,
+                                    now()->addDays(5)
+                                )
+                                : null,
+                        ],
+                        [
+                            "id" => $sender->id,
+                            "firstname" => $sender->profile->firstname,
+                            "lastname" => $sender->profile->lastname,
+                            "avatar" => $sender->profile->avatar
+                                ? Storage::temporaryUrl($sender->profile->avatar, now()->addDays(5))
+                                : null,
+                        ],
+                    ]),
+                    "message_request_id" => $messageRequest->id,
+                ])
+                ->toToken($sender->fcm_token);
+
+            $messaging->send($messageToSender);
+        }
+
+        return response()->json(["message" => "Message request accepted."], Response::HTTP_OK);
     }
 
     public function declineMessageRequest(Request $request): JsonResponse

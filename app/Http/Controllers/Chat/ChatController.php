@@ -12,6 +12,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Illuminate\Support\Str;
+use App\Models\Member;
 
 class ChatController extends Controller
 {
@@ -22,34 +25,36 @@ class ChatController extends Controller
             "chatId" => "required|integer|exists:pgsql.chats,id",
             "content" => "required|string|max:5000",
             "messageType" => "required|in:text,image,video,file",
-            "replyTo" => "nullable|integer",
-            // "replyTo" => "nullable|integer|exists:pgsql.messages,id",
+            "replyTo" => "nullable|integer|exists:pgsql.messages,id",
         ]);
 
         $senderId = auth()->id();
         $chatId = $request->chatId;
 
-        // will be deprecated depende sa performace: verify user is a participant of the chat
-        $isParticipant = ChatParticipant::where("chat_id", $chatId)->where("user_id", $senderId)->exists();
+        // Check if sender is part of the chat
+        $isParticipant = ChatParticipant::where("chat_id", $chatId)
+            ->where("user_id", $senderId)
+            ->exists();
+
         if (!$isParticipant) {
-            return response()->json(["message" => "You are not part of this chat"], Response::HTTP_FORBIDDEN);
+            return response()->json(
+                ["message" => "You are not part of this chat"],
+                Response::HTTP_FORBIDDEN
+            );
         }
 
-        // TODO: Process the content. If it is not text then save it to S3
-
+        // Create message
         $message = Message::create([
             "sender_id" => $senderId,
             "chat_id" => $chatId,
             "content" => $request->content,
             "message_type" => $request->messageType,
-            // "reply_to" => $request->replyTo,
+            "reply_to" => $request->replyTo,
         ]);
 
         $participantIds = ChatParticipant::where("chat_id", $chatId)->pluck("user_id");
 
-        $senderStatus = null;
-        $receiverStatus = null;
-
+        // Store status for each participant
         foreach ($participantIds as $userId) {
             $status = $userId == $senderId ? "sent" : "delivered";
 
@@ -61,27 +66,46 @@ class ChatController extends Controller
                     "status" => $status,
                 ]);
 
-            if ($userId != $senderId) {
-                $receiverStatus = [
-                    "id" => $insertedId,
-                    "message_id" => $message->id,
-                    "user_id" => $userId,
-                    "status" => $status,
-                    "updated_at" => now()->toIso8601String(),
-                ];
-            } else {
-                $senderStatus = [
-                    "id" => $insertedId,
-                    "message_id" => $message->id,
-                    "user_id" => $userId,
-                    "status" => $status,
-                    "updated_at" => now()->toIso8601String(),
-                ];
-            }
-        }
+            $statusPayload = [
+                "id" => $insertedId,
+                "message_id" => $message->id,
+                "user_id" => $userId,
+                "status" => $status,
+                "updated_at" => $message->updated_at->toIso8601String(),
+            ];
 
-        if ($receiverStatus) {
-            broadcast(new MessageSent($message, $receiverStatus, $request->localId));
+            // Send FCM if not the sender
+            if ($userId != $senderId) {
+                broadcast(new MessageSent($message, $statusPayload, $request->localId));
+
+                $fcmToken = Member::where("id", $userId)->value("fcm_token");
+
+                if ($fcmToken) {
+                    $messaging = app("firebase.messaging");
+
+                    $firebaseMessage = CloudMessage::new()
+                        ->withData([
+                            "type" => "chat-received",
+                            "title" => "New Message",
+                            "body" => Str::limit($message->content, 120, "..."),
+                            "message" => json_encode([
+                                "id" => $message->id,
+                                "sender_id" => $message->sender_id,
+                                "chat_id" => $message->chat_id,
+                                "content" => $message->content,
+                                "message_type" => $message->message_type,
+                                "reply_to" => $message->reply_to ?? null,
+                                "created_at" => $message->created_at->toIso8601String(),
+                                "updated_at" => $message->updated_at->toIso8601String(),
+                            ]),
+                            "status" => json_encode($statusPayload),
+                            "local_id" => $request->localId,
+                        ])
+                        ->toToken($fcmToken);
+
+                    $messaging->send($firebaseMessage);
+                }
+            }
         }
 
         return response()->json(
@@ -91,7 +115,6 @@ class ChatController extends Controller
             Response::HTTP_CREATED
         );
     }
-
     public function messageRead(Request $request)
     {
         $request->validate([
@@ -109,7 +132,9 @@ class ChatController extends Controller
 
         // Broadcast to sender
         if ($senderId && $senderId != $user->id) {
-            broadcast(new MessageRead($request->chat_id, $senderId, $user->id, [$request->message_id]))->toOthers();
+            broadcast(
+                new MessageRead($request->chat_id, $senderId, $user->id, [$request->message_id])
+            )->toOthers();
         }
 
         return response()->json(["status" => "ok"]);

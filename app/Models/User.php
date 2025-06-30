@@ -11,7 +11,7 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasApiTokens;
-    protected $connection = 'mysql';
+    protected $connection = "mysql";
     /**
      * The attributes that are mass assignable.
      *
@@ -91,5 +91,9 @@ class User extends Authenticatable
                         ->where("referrer_id", $this->id);
                 });
         });
+    }
+    public function referrer()
+    {
+        return $this->belongsTo(User::class, "referred_by");
     }
 }

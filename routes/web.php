@@ -21,10 +21,6 @@ Route::get("/", function () {
 
 Route::get("/municipality/{citymunCode}", [ProfileController::class, "showMunicipality"]);
 
-
-Route::get('/', function () {
-    return view('welcome');
+Route::get("/", function () {
+    return view("welcome");
 });
-
-
-

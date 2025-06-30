@@ -24,8 +24,8 @@ class AuthController extends Controller
             "fcmToken" => "required|string",
             "deviceId" => "required|string",
             "deviceName" => "required|string",
-            "loginLat" => "required|decimal",
-            "loginLon" => "required|decimal",
+            "loginLat" => "required|numeric|decimal:1,6",
+            "loginLon" => "required|numeric|decimal:1,6",
         ]);
 
         $user = Member::where("phone", $request->phone)->with("profile")->with("devices")->first();
@@ -48,9 +48,10 @@ class AuthController extends Controller
         $device = UserDevice::updateOrCreate(
             [
                 "device_id" => $request->deviceId,
+                "user_id" => $user->id,
             ],
             [
-                "device_name" => $request->deviceName,
+                "name" => $request->deviceName,
                 "login_lat" => $request->loginLat,
                 "login_lon" => $request->loginLon,
                 "is_online" => true,
