@@ -17,7 +17,7 @@ use App\Filament\Resources\ChatResource\RelationManagers;
 class ChatResource extends Resource
 {
     protected static ?string $model = Chat::class;
-    protected static ?string $navigationGroup = 'BGC CHAT';
+    protected static ?string $navigationGroup = 'Chat';
     // protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form

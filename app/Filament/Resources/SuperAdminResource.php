@@ -21,9 +21,11 @@ class SuperAdminResource extends Resource
     {
         return static::getModel()::count();
     }
+   
+    protected static ?string $navigationLabel = "User Accounts";
     protected static ?string $navigationBadgeTooltip = 'The number of users';
     protected static ?string $model = SuperAdmin::class;
-    protected static ?string $navigationGroup = 'SUPER ADMIN SETTINGS';
+    protected static ?string $navigationGroup = 'Admin Options';
    // protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form

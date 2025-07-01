@@ -27,7 +27,7 @@ use App\Filament\Resources\ChatParticipantResource\RelationManagers;
 class ChatParticipantResource extends Resource
 {
     protected static ?string $model = ChatParticipant::class;
-    protected static ?string $navigationGroup = 'BGC CHAT';
+    protected static ?string $navigationGroup = 'Chat';
     // protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     public static function canCreate(): bool
     {

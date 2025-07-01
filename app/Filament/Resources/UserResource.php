@@ -38,7 +38,7 @@ class UserResource extends Resource
     }
     protected static ?string $navigationBadgeTooltip = 'The number of BGC users';
     protected static ?string $model = User::class;
-    protected static ?string $navigationGroup = 'BGC Information';
+    protected static ?string $navigationGroup = 'Members';
     // protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form
