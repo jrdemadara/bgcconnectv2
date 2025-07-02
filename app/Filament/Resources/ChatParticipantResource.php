@@ -28,6 +28,7 @@ class ChatParticipantResource extends Resource
 {
     protected static ?string $model = ChatParticipant::class;
     protected static ?string $navigationGroup = 'Chat';
+    protected static ?int $navigationSort = 3;
     // protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     public static function canCreate(): bool
     {

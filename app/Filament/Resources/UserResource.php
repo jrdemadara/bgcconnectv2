@@ -24,6 +24,7 @@ use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ImageEntry;
 use App\Filament\Resources\UserResource\Pages;
+use Filament\Tables\Actions\EditAction;
 
 class UserResource extends Resource
 {
@@ -36,6 +37,8 @@ class UserResource extends Resource
     {
         return static::getModel()::count();
     }
+ 
+
     protected static ?string $navigationBadgeTooltip = 'The number of BGC users';
     protected static ?string $model = User::class;
     protected static ?string $navigationGroup = 'Members';
@@ -141,6 +144,10 @@ class UserResource extends Resource
             ])
             ->actions([
                 ViewAction::make(),
+                EditAction::make()
+                    ->label('Verify')
+                    ->visible(fn($record) => $record->id_status === 1),
+
             ])
             ->bulkActions([]);
     }
@@ -379,7 +386,7 @@ class UserResource extends Resource
     {
         return [
             'index' => Pages\ListUsers::route('/'),
-            'edit' => Pages\EditUser::route('/{record}/edit'),
+            'edit' => Pages\VerificationMembersPage::route('/{record}/edit'),
             'view' => Pages\ViewUser::route('/{record}'),
         ];
     }

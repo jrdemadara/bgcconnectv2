@@ -25,6 +25,7 @@ class SuperAdminResource extends Resource
     protected static ?string $navigationLabel = "User Accounts";
     protected static ?string $navigationBadgeTooltip = 'The number of users';
     protected static ?string $model = SuperAdmin::class;
+    protected static ?int $navigationSort = 6;
     protected static ?string $navigationGroup = 'Admin Options';
    // protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 

@@ -35,13 +35,13 @@ class HubPanelProvider extends PanelProvider
             ->favicon(asset('images/LOGO2.png'))
             ->font('Roboto Mono')
             ->sidebarFullyCollapsibleOnDesktop()
-            ->colors([      
+            ->colors([
                 'danger' => Color::Red,
                 'gray' => Color::Zinc,
                 'info' => Color::Blue,
                 'primary' => Color::Blue,
                 'success' => Color::Green,
-                'warning' => Color::Amber,  
+                'warning' => Color::Amber,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
@@ -70,17 +70,17 @@ class HubPanelProvider extends PanelProvider
             ])
             ->navigationGroups([
                 NavigationGroup::make()
-                    ->label('Chat')
-                    ->icon('heroicon-o-chat-bubble-left-right'), // chat/message icon
-                NavigationGroup::make()
                     ->label('Members')
                     ->icon('heroicon-o-user-group'), // user/profile icon
                 NavigationGroup::make()
-                    ->label('Admin Options')
-                    ->icon('heroicon-o-cog'), // user/profile icon
+                    ->label('Chat')
+                    ->icon('heroicon-o-chat-bubble-left-right'), // chat/message icon
                 NavigationGroup::make()
                     ->label('Events')
                     ->icon('heroicon-o-calendar-days'), // user/profile icon
+                NavigationGroup::make()
+                    ->label('Admin Options')
+                    ->icon('heroicon-o-cog'), // user/profile icon
             ]);
     }
 }
