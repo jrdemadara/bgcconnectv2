@@ -52,8 +52,8 @@ class ActivityAttendeesResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginated([10, 25, 50, 100])
             ->columns([
-                
                 TextColumn::make('profile') // just a dummy placeholder
                     ->label('Full Name')
                     ->searchable(query: function ($query, $search) {

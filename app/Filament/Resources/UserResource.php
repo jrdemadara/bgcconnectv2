@@ -53,6 +53,7 @@ class UserResource extends Resource
     {
 
         return $table
+            ->paginated([10, 25, 50, 100])
             ->recordUrl(null)
             ->columns([
                 TextColumn::make('id')->label('User Id')
