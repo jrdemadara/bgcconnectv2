@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 
 use App\Models\User;
-
+use Filament\Infolists\Components\View;
 
 use Filament\Forms\Form;
 use Filament\Tables\Table;
@@ -157,80 +157,20 @@ class UserResource extends Resource
 
                             ->columnSpanFull()
                             ->tabs([
-
                                 Tabs\Tab::make('Overview')
                                     ->schema([
-                                        Section::make('')
+                                        Section::make(' ') // ← outer section
                                             ->schema([
-                                                Section::make('')
+                                                Section::make(' ')           // ← inner section
                                                     ->schema([
-                                                        ImageEntry::make('header_image')
-                                                            ->label('')
-                                                            ->default('https://i.pravatar.cc/150?img=12')
-                                                            ->size(200)
-                                                            ->circular()
-                                                            ->alignCenter(),
-                                                        TextEntry::make('Full Name')
-                                                            ->label('')
-                                                            ->size(TextEntry\TextEntrySize::Large)
-                                                            ->color('primary')
-
-                                                            ->getStateUsing(
-                                                                fn($record) =>
-                                                                Str::title(trim(
-                                                                    $record->profile?->firstname . ' ' .
-                                                                    $record->profile?->middlename . ' ' .
-                                                                    $record->profile?->lastname . ' ' .
-                                                                    $record->profile?->extension
-                                                                ))
-                                                            )
-                                                            ->alignCenter(),
-
-                                                        TextEntry::make('id_status')
-                                                            ->label('')
-                                                            ->badge()
-
-                                                            ->size(TextEntry\TextEntrySize::Large)
-                                                            ->color(fn($state) => match ($state) {
-                                                                1 => 'info',
-                                                                2 => 'success',
-                                                                3 => 'danger',
-                                                                default => 'gray',
-                                                            })
-                                                            ->formatStateUsing(fn($state) => match ($state) {
-                                                                1 => '🔍 Unverified',
-                                                                2 => ' ✅  Verified ',
-                                                                3 => '❌ Denied',
-                                                                default => '❓ Undefined',
-                                                            })
-                                                            ->alignCenter(),
-                                                    ]),
-
-                                                Section::make()
-                                                    ->extraAttributes(['class' => 'overflow-auto']) // Tailwind here
-                                                    ->schema([
-                                                        Grid::make(4)
-                                                            ->schema([
-                                                                TextEntry::make('')
-                                                                    ->label('Points')
-                                                                    ->color('success')
-
-                                                                    ->default(fn($record) => $record->points ?? 0),
-
-                                                                TextEntry::make('direct_referrals')
-                                                                    ->color('success')
-                                                                    ->default(fn($record) => $record->directReferrals()->count()),
-                                                                TextEntry::make('indirect_referrals')
-                                                                    ->color('success')
-                                                                    ->default(fn($record) => $record->indirectReferrals()->count()),
-                                                                TextEntry::make('events')
-                                                                    ->color('success')
-                                                                    ->default(0),
-
+                                                        View::make('infolists.components.overview')
+                                                            ->viewData(fn($record) => [
+                                                                'record' => $record,
                                                             ]),
-                                                    ])
+                                                    ]),
                                             ]),
                                     ]),
+
 
                                 Tabs\Tab::make('Profile')
                                     ->icon('heroicon-m-identification')
