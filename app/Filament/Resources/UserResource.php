@@ -158,6 +158,7 @@ class UserResource extends Resource
                             ->columnSpanFull()
                             ->tabs([
                                 Tabs\Tab::make('Overview')
+                                    ->icon('heroicon-m-user-circle')
                                     ->schema([
                                         Section::make(' ') // ← outer section
                                             ->schema([
@@ -287,19 +288,30 @@ class UserResource extends Resource
                                     ->iconPosition(IconPosition::After)
                                     ->schema([
 
-                                        Section::make('Referral Counts')
-                                            ->columns(2)
-                                            ->schema([
-                                                TextEntry::make('direct_referrals_count')
-                                                    ->label('Direct Referrals')
-                                                    ->color('success')
-                                                    ->getStateUsing(fn($record) => $record->directReferrals()->count()),
+                                        Tabs::make('Referral Tabs')
+                                            ->tabs([
+                                                Tabs\Tab::make('Direct Referrals')
+                                                    ->schema([
+                                                        Section::make()
+                                                            ->schema([
+                                                                View::make('infolists.components.direct-referrals-table')
+                                                                    ->viewData(fn($record) => [
+                                                                        'userId' => $record->id, // the referrer’s ID
+                                                                    ])
+                                                            ]),
+                                                    ]),
 
-                                                TextEntry::make('indirect_referrals_count')
-                                                    ->label('Indirect Referrals')
-                                                    ->color('success')
-                                                    ->getStateUsing(fn($record) => $record->indirectReferrals()->count()),
-                                            ]),
+                                                Tabs\Tab::make('Indirect Referrals')
+                                                    ->schema([
+                                                        Section::make()
+                                                            ->schema([
+                                                                View::make('infolists.components.indirect-referrals-table')
+                                                                    ->viewData(fn($record) => [
+                                                                        'userId' => $record->id,
+                                                                    ]),
+                                                            ]),
+                                                    ])
+                                            ])
                                     ]),
 
 

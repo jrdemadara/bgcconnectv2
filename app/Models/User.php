@@ -78,20 +78,19 @@ class User extends Authenticatable
         );
     }
 
-    public function indirectReferrals()
-    {
-        return User::whereIn("id", function ($query) {
-            $query
-                ->select("referred_id")
-                ->from("referrals")
-                ->whereIn("referrer_id", function ($query2) {
-                    $query2
-                        ->select("referred_id")
-                        ->from("referrals")
-                        ->where("referrer_id", $this->id);
+   public function indirectReferrals()
+{
+    return User::with('profile') // ✅ eager load profile so firstname is accessible
+        ->whereIn('id', function ($query) {
+            $query->select('referred_id')
+                ->from('referrals')
+                ->whereIn('referrer_id', function ($query2) {
+                    $query2->select('referred_id')
+                        ->from('referrals')
+                        ->where('referrer_id', $this->id);
                 });
         });
-    }
+}
     public function referrer()
     {
         return $this->belongsTo(User::class, "referred_by");
