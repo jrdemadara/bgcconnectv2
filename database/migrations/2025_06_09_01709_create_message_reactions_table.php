@@ -16,7 +16,7 @@ return new class extends Migration {
             $table->string("reaction");
             $table->unique(["message_id", "user_id"]);
             $table->index(["message_id", "user_id"]);
-            $table->timestamp();
+            $table->timestamps();
             $table->softDeletes();
         });
     }

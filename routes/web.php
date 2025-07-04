@@ -19,8 +19,6 @@ Route::get("/", function () {
     $messaging->send($message);
 });
 
-
-
 Route::get("/", function () {
     return view("welcome");
 });

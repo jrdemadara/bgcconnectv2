@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Chat\ChatController;
+use App\Http\Controllers\Chat\MessageReactionController;
 use App\Http\Controllers\Chat\SearchMemberController;
 use App\Http\Controllers\FirebaseController;
 use Illuminate\Http\Request;
@@ -35,4 +36,6 @@ Route::middleware("auth:sanctum")->group(function () {
 
     Route::post("/chat-send", [ChatController::class, "sendChat"]);
     Route::patch("/chat-read", [ChatController::class, "messageRead"]);
+
+    Route::post("/message-reaction", [MessageReactionController::class, "store"]);
 });
