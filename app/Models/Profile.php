@@ -45,6 +45,7 @@ class Profile extends Model
         'facebook',
         'livelihood',
         'user_id',
+        'esig',
     ];
 
     public function member(): BelongsTo

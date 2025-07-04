@@ -74,17 +74,17 @@ class HubPanelProvider extends PanelProvider
             ])
             ->navigationGroups([
                 NavigationGroup::make()
-                    ->label('Chat')
-                    ->icon('heroicon-o-chat-bubble-left-right'), // chat/message icon
-                NavigationGroup::make()
                     ->label('Members')
                     ->icon('heroicon-o-user-group'), // user/profile icon
                 NavigationGroup::make()
-                    ->label('Admin Options')
-                    ->icon('heroicon-o-cog'), // user/profile icon
+                    ->label('Chat')
+                    ->icon('heroicon-o-chat-bubble-left-right'), // chat/message icon
                 NavigationGroup::make()
                     ->label('Events')
                     ->icon('heroicon-o-calendar-days'), // user/profile icon
+                NavigationGroup::make()
+                    ->label('Admin Options')
+                    ->icon('heroicon-o-cog'), // user/profile icon
             ])
             ->plugins([
                 LightSwitchPlugin::make(),
@@ -94,6 +94,7 @@ class HubPanelProvider extends PanelProvider
                             ->directory('images/backgrounds')
                     ),
 
+                
             ]);
     }
 }

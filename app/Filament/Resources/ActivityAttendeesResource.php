@@ -33,6 +33,7 @@ class ActivityAttendeesResource extends Resource
     {
         return false;
     }
+    protected static ?int $navigationSort = 5;
 
     //  protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $navigationGroup = 'Events';

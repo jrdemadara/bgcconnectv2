@@ -26,6 +26,7 @@ class ActivityResource extends Resource
 {
     protected static ?string $model = Activity::class;
     protected static ?string $navigationGroup = 'Events';
+    protected static ?int $navigationSort = 4;
     // protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     public static function canCreate(): bool
     {
