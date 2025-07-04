@@ -26,6 +26,7 @@ class ActivityResource extends Resource
 {
     protected static ?string $model = Activity::class;
     protected static ?string $navigationGroup = 'Events';
+    protected static ?int $navigationSort = 4;
     // protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     public static function canCreate(): bool
     {
@@ -35,7 +36,7 @@ class ActivityResource extends Resource
     {
         return false;
     }
-   
+
 
     public static function form(Form $form): Form
     {
@@ -66,6 +67,7 @@ class ActivityResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginated([10, 25, 50, 100])
             ->columns([
 
                 Tables\Columns\TextColumn::make('name')
@@ -111,67 +113,67 @@ class ActivityResource extends Resource
     }
 
 
-   public static function infolist(Infolist $infolist): Infolist
-{
-    return $infolist
-        ->schema([
-            Section::make('Activity Details')
-                ->schema([
-                    Fieldset::make('Basic Info')
-                        ->schema([
-                            TextEntry::make('code')->label('Code'),
-                            TextEntry::make('name')->label('Name'),
-                            TextEntry::make('description')
-                                ->label('Description')
-                                ->columnSpanFull(),
-                        ])
-                        ->columns(2),
-                ]),
-
-            Section::make('Schedule')
-                ->schema([
-                    Fieldset::make('Dates')
-                        ->schema([
-                            TextEntry::make('date_start')
-                                ->label('Start Date')
-                                ->formatStateUsing(fn($state) => $state ? Carbon::parse($state)->format('M d, Y') : '-'),
-
-                            TextEntry::make('date_end')
-                                ->label('End Date')
-                                ->formatStateUsing(fn($state) => $state ? Carbon::parse($state)->format('M d, Y') : '-'),
-                        ])
-                        ->columns(2),
-                ]),
-
-            Section::make('Location & Points')
-                ->schema([
-                    Fieldset::make('Details')
-                        ->schema([
-                            TextEntry::make('location')
-                                ->label('Location')
-                                ->columnSpanFull(),
-
-                            TextEntry::make('points')
-                                ->label('Points')
-                                ->formatStateUsing(fn($state) => $state . ' pts'),
-                        ])
-                        ->columns(2),
-                ]),
-
-            Section::make('Metadata')
-                ->schema([
-                    Split::make([
-                        Fieldset::make(' ')
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Section::make('Activity Details')
+                    ->schema([
+                        Fieldset::make('Basic Info')
                             ->schema([
-                                TextEntry::make('created_at')
-                                    ->label('Created At')
-                                    ->weight(FontWeight::Medium)
-                                    ->formatStateUsing(fn($state) => $state ? Carbon::parse($state)->format('M d, Y h:i A') : '-'),
-                            ]),
+                                TextEntry::make('code')->label('Code'),
+                                TextEntry::make('name')->label('Name'),
+                                TextEntry::make('description')
+                                    ->label('Description')
+                                    ->columnSpanFull(),
+                            ])
+                            ->columns(2),
                     ]),
-                ]),
-        ]);
-}
+
+                Section::make('Schedule')
+                    ->schema([
+                        Fieldset::make('Dates')
+                            ->schema([
+                                TextEntry::make('date_start')
+                                    ->label('Start Date')
+                                    ->formatStateUsing(fn($state) => $state ? Carbon::parse($state)->format('M d, Y') : '-'),
+
+                                TextEntry::make('date_end')
+                                    ->label('End Date')
+                                    ->formatStateUsing(fn($state) => $state ? Carbon::parse($state)->format('M d, Y') : '-'),
+                            ])
+                            ->columns(2),
+                    ]),
+
+                Section::make('Location & Points')
+                    ->schema([
+                        Fieldset::make('Details')
+                            ->schema([
+                                TextEntry::make('location')
+                                    ->label('Location')
+                                    ->columnSpanFull(),
+
+                                TextEntry::make('points')
+                                    ->label('Points')
+                                    ->formatStateUsing(fn($state) => $state . ' pts'),
+                            ])
+                            ->columns(2),
+                    ]),
+
+                Section::make('Metadata')
+                    ->schema([
+                        Split::make([
+                            Fieldset::make(' ')
+                                ->schema([
+                                    TextEntry::make('created_at')
+                                        ->label('Created At')
+                                        ->weight(FontWeight::Medium)
+                                        ->formatStateUsing(fn($state) => $state ? Carbon::parse($state)->format('M d, Y h:i A') : '-'),
+                                ]),
+                        ]),
+                    ]),
+            ]);
+    }
     public static function getRelations(): array
     {
         return [

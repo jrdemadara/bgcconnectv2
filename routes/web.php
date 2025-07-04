@@ -19,8 +19,6 @@ Route::get("/", function () {
     $messaging->send($message);
 });
 
-//Route::get("/municipality/{citymunCode}", [ProfileController::class, "showMunicipality"]);
-
 Route::get("/", function () {
     return view("welcome");
 });

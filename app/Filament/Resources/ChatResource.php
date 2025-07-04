@@ -17,9 +17,9 @@ use App\Filament\Resources\ChatResource\RelationManagers;
 class ChatResource extends Resource
 {
     protected static ?string $model = Chat::class;
-    protected static ?string $navigationGroup = 'BGC CHAT';
+    protected static ?string $navigationGroup = 'Chat';
     // protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-
+    protected static ?int $navigationSort = 2;
     public static function form(Form $form): Form
     {
         return $form
@@ -42,6 +42,7 @@ class ChatResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginated([10, 25, 50, 100])
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),

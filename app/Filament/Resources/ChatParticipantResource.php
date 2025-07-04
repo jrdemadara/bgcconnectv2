@@ -27,7 +27,8 @@ use App\Filament\Resources\ChatParticipantResource\RelationManagers;
 class ChatParticipantResource extends Resource
 {
     protected static ?string $model = ChatParticipant::class;
-    protected static ?string $navigationGroup = 'BGC CHAT';
+    protected static ?string $navigationGroup = 'Chat';
+    protected static ?int $navigationSort = 3;
     // protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     public static function canCreate(): bool
     {
@@ -60,6 +61,7 @@ class ChatParticipantResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginated([10, 25, 50, 100])
             ->columns([
                 Tables\Columns\TextColumn::make('chat.name')
                     ->numeric()

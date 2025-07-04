@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 
 use App\Models\User;
-
+use Filament\Infolists\Components\View;
 
 use Filament\Forms\Form;
 use Filament\Tables\Table;
@@ -24,6 +24,7 @@ use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ImageEntry;
 use App\Filament\Resources\UserResource\Pages;
+use Filament\Tables\Actions\EditAction;
 
 class UserResource extends Resource
 {
@@ -36,9 +37,11 @@ class UserResource extends Resource
     {
         return static::getModel()::count();
     }
+ 
+
     protected static ?string $navigationBadgeTooltip = 'The number of BGC users';
     protected static ?string $model = User::class;
-    protected static ?string $navigationGroup = 'BGC Information';
+    protected static ?string $navigationGroup = 'Members';
     // protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form
@@ -53,6 +56,7 @@ class UserResource extends Resource
     {
 
         return $table
+            ->paginated([10, 25, 50, 100])
             ->recordUrl(null)
             ->columns([
                 TextColumn::make('id')->label('User Id')
@@ -141,6 +145,10 @@ class UserResource extends Resource
             ])
             ->actions([
                 ViewAction::make(),
+                EditAction::make()
+                    ->label('Verify')
+                    ->visible(fn($record) => $record->id_status === 1),
+
             ])
             ->bulkActions([]);
     }
@@ -156,80 +164,21 @@ class UserResource extends Resource
 
                             ->columnSpanFull()
                             ->tabs([
-
                                 Tabs\Tab::make('Overview')
+                                    ->icon('heroicon-m-user-circle')
                                     ->schema([
-                                        Section::make('')
+                                        Section::make(' ') // ← outer section
                                             ->schema([
-                                                Section::make('')
+                                                Section::make(' ')           // ← inner section
                                                     ->schema([
-                                                        ImageEntry::make('header_image')
-                                                            ->label('')
-                                                            ->default('https://i.pravatar.cc/150?img=12')
-                                                            ->size(200)
-                                                            ->circular()
-                                                            ->alignCenter(),
-                                                        TextEntry::make('Full Name')
-                                                            ->label('')
-                                                            ->size(TextEntry\TextEntrySize::Large)
-                                                            ->color('primary')
-
-                                                            ->getStateUsing(
-                                                                fn($record) =>
-                                                                Str::title(trim(
-                                                                    $record->profile?->firstname . ' ' .
-                                                                    $record->profile?->middlename . ' ' .
-                                                                    $record->profile?->lastname . ' ' .
-                                                                    $record->profile?->extension
-                                                                ))
-                                                            )
-                                                            ->alignCenter(),
-
-                                                        TextEntry::make('id_status')
-                                                            ->label('')
-                                                            ->badge()
-
-                                                            ->size(TextEntry\TextEntrySize::Large)
-                                                            ->color(fn($state) => match ($state) {
-                                                                1 => 'info',
-                                                                2 => 'success',
-                                                                3 => 'danger',
-                                                                default => 'gray',
-                                                            })
-                                                            ->formatStateUsing(fn($state) => match ($state) {
-                                                                1 => '🔍 Unverified',
-                                                                2 => ' ✅  Verified ',
-                                                                3 => '❌ Denied',
-                                                                default => '❓ Undefined',
-                                                            })
-                                                            ->alignCenter(),
-                                                    ]),
-
-                                                Section::make()
-                                                    ->extraAttributes(['class' => 'overflow-auto']) // Tailwind here
-                                                    ->schema([
-                                                        Grid::make(4)
-                                                            ->schema([
-                                                                TextEntry::make('')
-                                                                    ->label('Points')
-                                                                    ->color('success')
-
-                                                                    ->default(fn($record) => $record->points ?? 0),
-
-                                                                TextEntry::make('direct_referrals')
-                                                                    ->color('success')
-                                                                    ->default(fn($record) => $record->directReferrals()->count()),
-                                                                TextEntry::make('indirect_referrals')
-                                                                    ->color('success')
-                                                                    ->default(fn($record) => $record->indirectReferrals()->count()),
-                                                                TextEntry::make('events')
-                                                                    ->color('success')
-                                                                    ->default(0),
-
+                                                        View::make('infolists.components.overview')
+                                                            ->viewData(fn($record) => [
+                                                                'record' => $record,
                                                             ]),
-                                                    ])
+                                                    ]),
                                             ]),
                                     ]),
+
 
                                 Tabs\Tab::make('Profile')
                                     ->icon('heroicon-m-identification')
@@ -346,19 +295,30 @@ class UserResource extends Resource
                                     ->iconPosition(IconPosition::After)
                                     ->schema([
 
-                                        Section::make('Referral Counts')
-                                            ->columns(2)
-                                            ->schema([
-                                                TextEntry::make('direct_referrals_count')
-                                                    ->label('Direct Referrals')
-                                                    ->color('success')
-                                                    ->getStateUsing(fn($record) => $record->directReferrals()->count()),
+                                        Tabs::make('Referral Tabs')
+                                            ->tabs([
+                                                Tabs\Tab::make('Direct Referrals')
+                                                    ->schema([
+                                                        Section::make()
+                                                            ->schema([
+                                                                View::make('infolists.components.direct-referrals-table')
+                                                                    ->viewData(fn($record) => [
+                                                                        'userId' => $record->id, // Pass user ID to Livewire
+                                                                    ]),
+                                                            ]),
+                                                    ]),
 
-                                                TextEntry::make('indirect_referrals_count')
-                                                    ->label('Indirect Referrals')
-                                                    ->color('success')
-                                                    ->getStateUsing(fn($record) => $record->indirectReferrals()->count()),
-                                            ]),
+                                                Tabs\Tab::make('Indirect Referrals')
+                                                    ->schema([
+                                                        Section::make()
+                                                            ->schema([
+                                                                View::make('infolists.components.indirect-referrals-table')
+                                                                    ->viewData(fn($record) => [
+                                                                        'userId' => $record->id,
+                                                                    ]),
+                                                            ]),
+                                                    ])
+                                            ])
                                     ]),
 
 
@@ -379,7 +339,7 @@ class UserResource extends Resource
     {
         return [
             'index' => Pages\ListUsers::route('/'),
-            'edit' => Pages\EditUser::route('/{record}/edit'),
+            'edit' => Pages\VerificationMembersPage::route('/{record}/edit'),
             'view' => Pages\ViewUser::route('/{record}'),
         ];
     }

@@ -8,6 +8,7 @@ use Filament\Widgets;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Navigation\NavigationGroup;
+use Awcodes\LightSwitch\LightSwitchPlugin;
 use Filament\Http\Middleware\Authenticate;
 use App\Filament\Widgets\ActiveUsersWidget;
 use Illuminate\Session\Middleware\StartSession;
@@ -15,7 +16,9 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Filament\Http\Middleware\AuthenticateSession;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Swis\Filament\Backgrounds\ImageProviders\MyImages;
 use Filament\Http\Middleware\DisableBladeIconComponents;
+use Swis\Filament\Backgrounds\FilamentBackgroundsPlugin;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -29,16 +32,18 @@ class HubPanelProvider extends PanelProvider
             ->id('hub')
             ->path('hub')
             ->login()
-            ->brandLogo(asset('images/logo.png'))
+            ->brandLogo(asset('images/logo3.png'))
             ->brandName('BGC CONNECT')
-            ->favicon(asset('images/logo.png'))
+            ->brandLogoHeight('3rem')
+            ->favicon(asset('images/LOGO2.png'))
             ->font('Roboto Mono')
             ->sidebarFullyCollapsibleOnDesktop()
+           
             ->colors([
                 'danger' => Color::Red,
                 'gray' => Color::Zinc,
                 'info' => Color::Blue,
-                'primary' => Color::Amber,
+                'primary' => Color::Blue,
                 'success' => Color::Green,
                 'warning' => Color::Amber,
             ])
@@ -69,17 +74,27 @@ class HubPanelProvider extends PanelProvider
             ])
             ->navigationGroups([
                 NavigationGroup::make()
-                    ->label('BGC CHAT')
+                    ->label('Members')
+                    ->icon('heroicon-o-user-group'), // user/profile icon
+                NavigationGroup::make()
+                    ->label('Chat')
                     ->icon('heroicon-o-chat-bubble-left-right'), // chat/message icon
-                NavigationGroup::make()
-                    ->label('BGC Information')
-                    ->icon('heroicon-o-user-circle'), // user/profile icon
-                NavigationGroup::make()
-                    ->label('SUPER ADMIN SETTINGS')
-                    ->icon('heroicon-o-cog'), // user/profile icon
                 NavigationGroup::make()
                     ->label('Events')
                     ->icon('heroicon-o-calendar-days'), // user/profile icon
+                NavigationGroup::make()
+                    ->label('Admin Options')
+                    ->icon('heroicon-o-cog'), // user/profile icon
+            ])
+            ->plugins([
+                LightSwitchPlugin::make(),
+                FilamentBackgroundsPlugin::make()
+                    ->imageProvider(
+                        MyImages::make()
+                            ->directory('images/backgrounds')
+                    ),
+
+                
             ]);
     }
 }

@@ -3,3 +3,6 @@
 @tailwind utilities;
 
 /* Optional: add your custom CSS here */
+.fi-sidebar{
+  @apply bg-gray-50 dark:bg-gray-950 !important;
+}
