@@ -296,8 +296,8 @@ class UserResource extends Resource
                                                             ->schema([
                                                                 View::make('infolists.components.direct-referrals-table')
                                                                     ->viewData(fn($record) => [
-                                                                        'userId' => $record->id, // the referrer’s ID
-                                                                    ])
+                                                                        'userId' => $record->id, // Pass user ID to Livewire
+                                                                    ]),
                                                             ]),
                                                     ]),
 
